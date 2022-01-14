@@ -29,8 +29,8 @@ var isBackFlag = false;
 // 小程序标记
 var isXcx = false;
 var jdAppName = "com.jingdong.app.mall";
-var huodong_indexInParent_num_start=17;
-var huodong_indexInParent_num_end=25;
+var huodong_indexInParent_num_start = 17;
+var huodong_indexInParent_num_end = 25;
 var huodong_indexInParent_num = 18;
 // 记录活动页面头部坐标
 var headerXY;
@@ -157,12 +157,12 @@ function start() {
     auto.waitFor();
     var autoRunJd = getPackageName("悟空分身") == null;
     if (autoRunJd && launch(jdAppName)) {
-        console.info("启动京东APP");        
+        console.info("启动京东APP");
     }
-    else{
+    else {
         console.info("存在分身，请手动启动京东");
     }
-    
+
     isRunXcx = getPackageName("微信") != null;
     console.show();
 }
@@ -188,17 +188,16 @@ function enterActivity() {
             }
 
             // 获取进入做任务界面的控件
-            if(id("homeBtnTeam").exists() && id("feedBottom").exists())
-            {
-                huodong_indexInParent_num_start=id("homeBtnTeam").findOnce().indexInParent()+1;
-                huodong_indexInParent_num_start=id("feedBottom").findOnce().indexInParent()-1;
+            if (id("homeBtnTeam").exists() && id("feedBottom").exists()) {
+                huodong_indexInParent_num_start = id("homeBtnTeam").findOnce().indexInParent() + 1;
+                huodong_indexInParent_num_start = id("feedBottom").findOnce().indexInParent() - 1;
             }
-            if(id("homeBtnTeam"))
-            var button = className('android.view.View')
-                .depth(14)
-                .indexInParent(huodong_indexInParent_num)
-                .drawingOrder(0)
-                .clickable();
+            if (id("homeBtnTeam"))
+                var button = className('android.view.View')
+                    .depth(14)
+                    .indexInParent(huodong_indexInParent_num)
+                    .drawingOrder(0)
+                    .clickable();
             if (button.exists()) {
                 console.info("点击进入做任务界面")
                 var rect = button.findOne().bounds();
@@ -208,7 +207,7 @@ function enterActivity() {
 
             } else {
                 huodong_indexInParent_num = huodong_indexInParent_num + 1;
-                if (huodong_indexInParent_num >huodong_indexInParent_num_end) {
+                if (huodong_indexInParent_num > huodong_indexInParent_num_end) {
                     console.info("无法自动进入做任务界面，请手动进入！");
                     huodong_indexInParent_num = huodong_indexInParent_num_start;
 
@@ -499,7 +498,7 @@ function getNeedSelector() {
                     isBackFlag = (TASK_LIST[i].indexOf("浏览可得") >= 0 || TASK_LIST[i].indexOf("浏览并关注可得") >= 0) ? true : false;
                     // 如果是小程序任务，将小程序标记设为true
                     isXcx = (TASK_LIST[i].indexOf("小程序") >= 0) ? true : false;
-                    if (isRunXcx && isXcx && currentPackage() != jdAppName) {
+                    if (isXcx && (currentPackage() != jdAppName || isRunXcx == false)) {
                         //console.log(currentActivity())
                         continue;
                     }
