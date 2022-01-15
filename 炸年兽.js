@@ -184,7 +184,7 @@ function start() {
  * 进入做任务界面
  */
 function enterActivity() {
-    console.info("准备进入任务界面");
+    
     if (!textContains("累计任务奖励").exists()) {
         sleep(4000);
         if (textContains("累计任务奖励").exists()) {
@@ -201,6 +201,7 @@ function enterActivity() {
 
             // 获取进入做任务界面的控件
             if (id("homeBtnTeam").exists()) {
+                console.info("活动页面");
                 //活动页面，不执行定时器
                 JUDGE_TIME = 0;
                 huodong_indexInParent_num_start = id("homeBtnTeam").findOnce().indexInParent() + 2;
@@ -251,6 +252,7 @@ function enterActivity() {
                     clickCollect.parent().child(clickCollect.indexInParent() + 1).click();
                     sleep(5000);
                 } else {
+                    console.log("尝试点击任务");
                     var button = className('android.view.View')
                         .depth(14)
                         .indexInParent(huodong_indexInParent_num)
