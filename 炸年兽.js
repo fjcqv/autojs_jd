@@ -257,7 +257,7 @@ function enterActivity() {
                     textContains("开心收下").waitFor();
                     textContains("开心收下").findOne().parent().click();
                     sleep(1000);
-                    noCheck=false;
+                    noCheck = false;
                 } else if (noCollect && textMatches(/00:.*后满|爆竹满了~~/).exists()) {
                     console.log("收集爆竹");
                     var clickCollect = textMatches(/00:.*后满|爆竹满了~~/).findOne();
@@ -470,15 +470,19 @@ function viewTask(flag) {
         } else if (isSYPPQ) {
             console.info("进入首页品牌墙任务");
             sleep(1000);
-            if (textContains("后满").exists()) {
-                var task2 = textContains("后满").findOne().parent().parent()
+            var allPinpai = className('android.widget.Image')
+                .depth(19)
+                .indexInParent(0)
+                .drawingOrder(0)
+                .find();
+            if (allPinpai.length>10) {
                 for (var i = 0; i < 3; i++) {
                     // 重置计时
                     JUDGE_TIME = 0;
                     console.log("第" + (i + 1) + "个店铺");
-                    task2.child(task2.childCount() - 3).child(0).child(1).child(i).click();
+                    allPinpai[i].parent().parent().click();
                     sleep(3500);
-                    for (var ii = 0; !textContains("后满").exists(); ii++) {
+                    for (var ii = 0; !text("集爆竹炸年兽集爆竹炸年兽").exists(); ii++) {
                         console.log("返回")
                         back();
                         sleep(1500);
