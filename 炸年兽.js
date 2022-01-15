@@ -247,9 +247,9 @@ function enterActivity() {
                     textContains("开心收下").findOne().parent().click();
                     sleep(1000);
                 } else if (textMatches(/00:.*后满|爆竹满了~~/).exists()) {
+                    console.log("收集爆竹");
                     var clickCollect = textMatches(/00:.*后满|爆竹满了~~/).findOne();
-                    clickCollect = clickCollect.parent();
-                    clickCollect.parent().child(clickCollect.indexInParent() + 1).click();
+                    clickCollect.parent().parent().child(2).click();
                     sleep(5000);
                 } else {
                     console.log("尝试点击任务");
