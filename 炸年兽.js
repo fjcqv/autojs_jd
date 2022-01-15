@@ -33,6 +33,10 @@ var isBackFlag = false;
 var isXcx = false;
 // 首页品牌墙标记
 var isSYPPQ = false;
+//收集按钮
+var noCollect = true;
+
+var noCheck = true;
 var jdAppName = "com.jingdong.app.mall";
 var huodong_indexInParent_num_start = 17;
 var huodong_indexInParent_num_end = 20;
@@ -243,7 +247,7 @@ function enterActivity() {
                     console.log("开心收下");
                     textContains("开心收下").findOne().parent().click();
                     sleep(2000);
-                } else if (text("立即前往").exists()) {
+                } else if (noCheck && text("立即前往").exists()) {
                     console.log("前往签到");
                     textContains("立即前往").findOne().parent().click();
                     sleep(500);
@@ -253,11 +257,12 @@ function enterActivity() {
                     textContains("开心收下").waitFor();
                     textContains("开心收下").findOne().parent().click();
                     sleep(1000);
-                } else if (textMatches(/00:.*后满|爆竹满了~~/).exists()) {
+                    noCheck=false;
+                } else if (noCollect && textMatches(/00:.*后满|爆竹满了~~/).exists()) {
                     console.log("收集爆竹");
                     var clickCollect = textMatches(/00:.*后满|爆竹满了~~/).findOne();
                     clickCollect.parent().parent().child(2).click();
-                    sleep(5000);
+                    sleep(5000); noCollect = false;
                 } else {
                     console.log("尝试点击任务");
                     var button = className('android.view.View')
