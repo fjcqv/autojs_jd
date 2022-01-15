@@ -200,12 +200,12 @@ function enterActivity() {
             }
 
             // 获取进入做任务界面的控件
-            if (id("homeBtnTeam").exists()) {
+            if (descContains("集爆竹炸年兽").exists()) {
                 console.info("活动页面");
                 //活动页面，不执行定时器
                 JUDGE_TIME = 0;
-                huodong_indexInParent_num_start = id("homeBtnTeam").findOnce().indexInParent() + 2;
-                huodong_indexInParent_num_end = id("feedBottom").findOnce().indexInParent() + 4;
+                huodong_indexInParent_num_start = descContains("集爆竹炸年兽").findOnce().indexInParent() + 1;
+                huodong_indexInParent_num_end = descContains("集爆竹炸年兽").findOnce().indexInParent() + 3;
                 if (huodong_indexInParent_num > huodong_indexInParent_num_end) {
                     huodong_indexInParent_num = huodong_indexInParent_num_start;
                 }
