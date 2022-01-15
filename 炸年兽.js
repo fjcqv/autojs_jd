@@ -13,9 +13,12 @@
  */
 
 // 需要完成的任务列表
-var TASK_LIST = ["浏览并关注", "浏览8秒", "浏览8s", "累计浏览", "浏览并关注可得2000", "浏览可得", "浏览并关注可得", "去首页浮层进入", "浏览5个品牌墙店铺", "小程序", "玩AR游戏可得"];
+var TASK_LIST = ["浏览并关注8s可得", "浏览8秒可得", "浏览8s可得", "成功入会", "种草城", "累计浏览", "浏览并关注可得",
+    "浏览可得", "玩AR游戏可得", "去首页浮层进入", "首页品牌墙", "小程序", "每日6-9点打卡可得","去组队可得"];
+//浏览就返回的任务
+var BACK_LIST = ["浏览并关注可得", "浏览可得", "玩AR游戏可得","去组队可得"];
 // 过渡操作
-var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制"];
+var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
 // 判断停留时间
 var JUDGE_TIME = 0;
 // 定时器
@@ -28,15 +31,25 @@ var current_task_num = 0;
 var isBackFlag = false;
 // 小程序标记
 var isXcx = false;
+// 首页品牌墙标记
+var isSYPPQ = false;
 var jdAppName = "com.jingdong.app.mall";
 var huodong_indexInParent_num_start = 17;
-var huodong_indexInParent_num_end = 25;
+var huodong_indexInParent_num_end = 20;
 var huodong_indexInParent_num = 18;
 // 记录活动页面头部坐标
 var headerXY;
 var isRunXcx = false;
-var ruhui_errtime = 0
-var AppType = 1; //1: 京东APP  2:京东金融
+var ruhui_errtime = 0;
+
+
+Array.prototype.remove = function (val) {
+    var index = this.indexOf(val);
+    if (index > -1) {
+        this.splice(index, 1);
+    }
+};
+
 init();
 
 
@@ -111,23 +124,23 @@ function init() {
     });
 
     start();
-    /*
-// 子线程开启计时
-threads.start(function () {
- 
-    if (interval == null) {
-        // 开启计时器，进行卡顿计时
-        // 启动定时器前，将计数器归为0
-        JUDGE_TIME = 0;
-        log("开启定时器");
-        interval = setInterval(function () {
-            JUDGE_TIME = JUDGE_TIME + 1;
-        }, 1000);
-    }
-});
-    */
 
-    while (true) {
+    // 子线程开启计时
+    threads.start(function () {
+
+        if (interval == null) {
+            // 开启计时器，进行卡顿计时
+            // 启动定时器前，将计数器归为0
+            JUDGE_TIME = 0;
+            log("开启定时器");
+            interval = setInterval(function () {
+                JUDGE_TIME = JUDGE_TIME + 1;
+            }, 1000);
+        }
+    });
+
+
+    while (finished_task_num.length < 4) {
         try {
             transitioPperation();
 
@@ -136,15 +149,15 @@ threads.start(function () {
             recoverApp();
 
             var flag = getNeedSelector();
-
             if (viewTask(flag) == 0)
                 addMarketCar();
         } catch (e) {
             log(e);
         }
 
-    }
 
+    }
+    console.log("任务全部完成");
 
 }
 
@@ -184,37 +197,87 @@ function enterActivity() {
                 var huodong = desc("浮层活动").findOne().bounds();
                 randomClick(huodong.centerX(), huodong.centerY());
                 sleep(1000);
-
             }
 
             // 获取进入做任务界面的控件
-            if (id("homeBtnTeam").exists() && id("feedBottom").exists()) {
-                huodong_indexInParent_num_start = id("homeBtnTeam").findOnce().indexInParent() + 1;
-                huodong_indexInParent_num_start = id("feedBottom").findOnce().indexInParent() - 1;
-            }
-            if (id("homeBtnTeam"))
-                var button = className('android.view.View')
-                    .depth(14)
-                    .indexInParent(huodong_indexInParent_num)
-                    .drawingOrder(0)
-                    .clickable();
-            if (button.exists()) {
-                console.info("点击进入做任务界面")
-                var rect = button.findOne().bounds();
-                randomClick(rect.centerX(), rect.centerY());
-                sleep(1000);
-                headerXY = id("a96").findOne().bounds();
-
-            } else {
-                huodong_indexInParent_num = huodong_indexInParent_num + 1;
+            if (id("homeBtnTeam").exists()) {
+                //活动页面，不执行定时器
+                JUDGE_TIME = 0;
+                huodong_indexInParent_num_start = id("homeBtnTeam").findOnce().indexInParent() + 2;
+                huodong_indexInParent_num_end = id("feedBottom").findOnce().indexInParent() + 4;
                 if (huodong_indexInParent_num > huodong_indexInParent_num_end) {
-                    console.info("无法自动进入做任务界面，请手动进入！");
                     huodong_indexInParent_num = huodong_indexInParent_num_start;
+                }
+                if (textContains("继续环游").exists()) {
+                    console.log("继续环游");
+                    textContains("继续环游").findOne().click();
+                    sleep(2000);
+                } else if (textContains("立即抽奖").exists()) {
+                    console.log("关闭立即抽奖");
+                    textContains("立即抽奖").findOne().parent().child(1).click();
+                    sleep(2000);
+                } else if (textContains("开启今日环游").exists()) {
+                    console.log("开启今日环游");
+                    textContains("开启今日环游").findOne().click();
+                    sleep(2000);
+                } else if (textContains("点我签到").exists()) {
+                    console.log("点我签到");
+                    textContains("点我签到").findOne().parent().click();
+                    sleep(2000);
+                    textContains("开心收下").waitFor();
+                    textContains("开心收下").findOne().parent().click();
+                    sleep(2000);
+                } else if (text("开心收下开心收下").exists()) {
+                    console.log("开心收下");
+                    text("开心收下开心收下").findOne().click();
+                    sleep(2000);
+                } else if (textContains("开心收下").exists()) {
+                    console.log("开心收下");
+                    textContains("开心收下").findOne().parent().click();
+                    sleep(2000);
+                } else if (text("立即前往").exists()) {
+                    console.log("前往签到");
+                    textContains("立即前往").findOne().parent().click();
+                    sleep(500);
+                    console.log("点我签到");
+                    textContains("点我签到").findOne().parent().click();
+                    sleep(1000);
+                    textContains("开心收下").waitFor();
+                    textContains("开心收下").findOne().parent().click();
+                    sleep(1000);
+                } else if (textMatches(/00:.*后满|爆竹满了~~/).exists()) {
+                    var clickCollect = textMatches(/00:.*后满|爆竹满了~~/).findOne();
+                    clickCollect = clickCollect.parent();
+                    clickCollect.parent().child(clickCollect.indexInParent() + 1).click();
+                    sleep(5000);
+                } else {
+                    var button = className('android.view.View')
+                        .depth(14)
+                        .indexInParent(huodong_indexInParent_num)
+                        .drawingOrder(0)
+                        .clickable();
+                    if (button.exists()) {
 
+                        console.info("点击进入做任务界面", huodong_indexInParent_num)
+                        var rect = button.findOne().bounds();
+                        randomClick(rect.centerX(), rect.centerY());
+                        sleep(1000);
+                        headerXY = id("a96").findOne().bounds();
+
+                    } else {
+                        huodong_indexInParent_num = huodong_indexInParent_num + 1;
+                        if (huodong_indexInParent_num > huodong_indexInParent_num_end) {
+                            console.info("无法自动进入做任务界面，请手动进入！");
+                            console.log(huodong_indexInParent_num_start, "", huodong_indexInParent_num_end)
+                            huodong_indexInParent_num = huodong_indexInParent_num_start;
+
+                        }
+                    }
                 }
             }
+
         }
-        //sleep(1000);
+        sleep(1000);
     }
 }
 
@@ -226,7 +289,7 @@ function viewTask(flag) {
     var res = 0;
     // 根据坐标点击任务，判断哪些需要进行
     sleep(2000);
-    var timeout = 15
+    var timeout = 15;
     var timestart = new Date().getTime();
     console.info("开始时间:" + timestart)
     var timenow = new Date().getTime();
@@ -258,6 +321,13 @@ function viewTask(flag) {
                 // 将当前任务序号添加到列表中，防止后续点到
                 finished_task_num[finished_task_num.length] = current_task_num;
             }
+            viewAndFollow();
+            // 重置计时
+            JUDGE_TIME = 0;
+            break;
+        }
+        else if (textContains('我的特权').exists()) {
+            console.info("会员已领取，返回");
             viewAndFollow();
             // 重置计时
             JUDGE_TIME = 0;
@@ -359,6 +429,7 @@ function viewTask(flag) {
             console.info("进入浏览就返回任务");
             //sleep(1000);
             viewAndFollow();
+            JUDGE_TIME = 0;
             isBackFlag = false;
             break;
         } else if (isXcx) {
@@ -382,6 +453,36 @@ function viewTask(flag) {
 
             isXcx = false;
             break;
+        } else if (isSYPPQ) {
+            console.info("进入首页品牌墙任务");
+            sleep(1000);
+            if (textContains("后满").exists()) {
+                var task2 = textContains("后满").findOne().parent().parent()
+                for (var i = 0; i < 3; i++) {
+                    // 重置计时
+                    JUDGE_TIME = 0;
+                    console.log("第" + (i + 1) + "个店铺");
+                    task2.child(task2.childCount() - 3).child(0).child(1).child(i).click();
+                    sleep(3500);
+                    for (var ii = 0; !textContains("后满").exists(); ii++) {
+                        console.log("返回")
+                        back();
+                        sleep(1500);
+                        if (ii > 4) {
+                            console.log("返回活动界面，退出当前任务");
+                            return;
+                        }
+                    }
+                }
+                back();
+                sleep(1000);
+                isSYPPQ = false;
+                console.info("任务已达上限,切换已完成按钮");
+                // 将当前任务序号添加到列表中，防止后续点到
+                finished_task_num[finished_task_num.length] = current_task_num;
+                timestart = new Date().getTime();
+                break;
+            }
         } else {
             if (recoverApp()) {
                 break;
@@ -402,13 +503,9 @@ function viewTask(flag) {
 function addMarketCar() {
     if (textContains('当前页点击浏览4个').exists() || textContains('当前页浏览加购').exists()) {
         console.info("在加购页面");
-        // for(idx = 0; idx < 10; idx++)
-        // {
-        //     console.info("i:" + idx);
-        const productList = textContains('¥').find()//desc("￥").find();
+
+        const productList = textContains('¥').find()
         console.info(productList.length);
-        // }
-        //const productList = className('android.widget.Button').depth(19).clickable().find()
         var count = 0;
         for (index = 0; index < productList.length; index++) {
             if (count == 4) {
@@ -467,117 +564,47 @@ function interactionGrassPlanting() {
  * @returns 
  */
 function getNeedSelector() {
-    sleep(2000)
-    if (AppType == 0 || AppType == 1) {
-        var allSelector = className('android.view.View')
-            .depth(19)
-            .indexInParent(3)
-            .drawingOrder(0)
-            .clickable()
-            .find();
+    var allSelector = className('android.view.View')
+        .depth(19)
+        .indexInParent(3)
+        .drawingOrder(0)
+        .clickable()
+        .find();
 
-        for (let index = 0; index < allSelector.length; index++) {
-            if (AppType == 0) {
-                AppType = 1; //标记为京东APP
-                console.info("京东APP")
-            }
-            for (var i = 0; i < TASK_LIST.length; i++) {
-                // 获取具有需要完成任务字符串的控件集合
-                var list = allSelector[index].parent().findByText(TASK_LIST[i]);
-                // 如果长度大于0则表示存在该控件
-                if (list.size() > 0) {
-                    // 获取不在序列中的序号
-                    if (finished_task_num.indexOf(index) < 0) {
-                        console.info("当前已完成序列：", finished_task_num)
-                        current_task_num = index;
-                    } else {
-                        continue;
-                    }
+    for (let index = 0; index < allSelector.length; index++) {
+        for (var i = 0; i < TASK_LIST.length; i++) {
+            // 获取具有需要完成任务字符串的控件集合
+            var list = allSelector[index].parent().findByText(TASK_LIST[i]);
+            // 如果长度大于0则表示存在该控件
+            if (list.size() > 0) {
+                // 获取不在序列中的序号
+                if (finished_task_num.indexOf(index) < 0) {
+                    console.info("当前已完成序列：", finished_task_num)
+                    current_task_num = index;
+                } else {
+                    continue;
+                }
 
-                    // 如果是浏览就返回的任务，将标记设为true
-                    isBackFlag = (TASK_LIST[i].indexOf("浏览可得") >= 0 || TASK_LIST[i].indexOf("浏览并关注可得") >= 0) ? true : false;
-                    // 如果是小程序任务，将小程序标记设为true
-                    isXcx = (TASK_LIST[i].indexOf("小程序") >= 0) ? true : false;
-                    if (isXcx && (currentPackage() != jdAppName || isRunXcx == false)) {
-                        //console.log(currentActivity())
-                        continue;
-                    }
-                    var rect = allSelector[current_task_num].bounds();
-                    if (textContains("当前进度").exists()) {
-                        console.info("去完成任务，当前任务序列：", current_task_num, TASK_LIST[i])
-                        if (TASK_LIST[i] == "浏览可得") {
-                            console.info("看下就回来")
-                            isBackFlag = true;
-                        }
-
-                        randomClick(rect.centerX(), rect.centerY());
-                        //console.info("开始任务:", allSelector[current_task_num].parent().findByText(TASK_LIST[i]).get(0).text());
-                        return true;
-                    }
+                // 如果是浏览就返回的任务，将标记设为true
+                isBackFlag = BACK_LIST.indexOf(TASK_LIST[i]) >= 0;
+                isSYPPQ = (TASK_LIST[i].indexOf("首页品牌墙") >= 0) ? true : false;
+                // 如果是小程序任务，将小程序标记设为true
+                isXcx = (TASK_LIST[i].indexOf("小程序") >= 0) ? true : false;
+                if (isXcx && (currentPackage() != jdAppName || isRunXcx == false)) {
+                    TASK_LIST.remove("小程序");
+                    continue;
+                }
+                var rect = allSelector[current_task_num].bounds();
+                if (textContains("累计任务奖励").exists()) {
+                    console.info("开始完成序号：", current_task_num, ",关键字:", TASK_LIST[i]);
+                    randomClick(rect.centerX(), rect.centerY());
+                    return true;
                 }
             }
         }
-
-    }
-
-
-
-    if (AppType == 0 || AppType == 2) {
-        console.info("判断是否是金融")
-        allSelector = textContains("每邀1个好友").findOne()
-        console.info(allSelector.text())
-        allSelector = allSelector.parent()
-        allSelector = allSelector.parent()
-        allSelector = allSelector.children()
-        console.info(allSelector.length)
-
-        for (let index = 0; index < allSelector.length; index++) {
-            for (var i = 0; i < TASK_LIST.length; i++) {
-                if (AppType == 0) {
-                    AppType = 2; //标记为京东金融APP
-                    console.info("京东金融")
-                }
-                // 获取具有需要完成任务字符串的控件集合
-                lab = allSelector[index].children()[2].text()
-
-                var list = allSelector[index].children()[2].findByText(TASK_LIST[i]);
-                // 如果长度大于0则表示存在该控件
-                if (list.size() > 0) {
-                    // 获取不在序列中的序号
-                    if (finished_task_num.indexOf(index) < 0) {
-                        console.info("当前已完成序列：", finished_task_num)
-                        current_task_num = index;
-                    } else {
-                        continue;
-                    }
-
-                    // 如果是浏览就返回的任务，将标记设为true
-                    isBackFlag = (TASK_LIST[i].indexOf("浏览可得") >= 0 || TASK_LIST[i].indexOf("浏览并关注可得") >= 0) ? true : false;
-                    // 如果是小程序任务，将小程序标记设为true
-                    isXcx = (TASK_LIST[i].indexOf("小程序") >= 0) ? true : false;
-                    var rect = allSelector[index].children()[3].bounds();
-                    if (textContains("当前进度").exists()) {
-                        console.info("去完成任务，当前任务序列：", current_task_num, TASK_LIST[i])
-                        if (TASK_LIST[i] == "浏览可得") {
-                            console.info("看下就回来")
-                            isBackFlag = true;
-                        }
-                        randomClick(rect.centerX(), rect.centerY());
-                        sleep(1000)
-                        if (textContains("当前进度").exists()) {
-                            finished_task_num[finished_task_num.length] = current_task_num;
-                            break;
-                        } else {
-                            //console.info("开始任务:", allSelector[current_task_num].parent().findByText(TASK_LIST[i]).get(0).text());
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
     }
 }
+
 
 /**
  * 返回
@@ -630,7 +657,7 @@ function transitioPperation() {
             } else {
                 text(PASS_LIST[index]).click();
             }
-            //sleep(100);
+            sleep(1000);
         }
     }
 }
@@ -648,12 +675,3 @@ function randomClick(x, y) {
     sleep(2000);
     return true;
 }
-
-/**
- * Author: czj
- * Date: 2021/10/20
- * Time: 23:02:50
- * Github: https://github.com/czj2369/jd_tb_auto
- */
-
-
