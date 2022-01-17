@@ -8,8 +8,8 @@ var Code = [
     "24:/￥6EC4y7N71OIby%來jìnɡ倲逛逛╰→，﹎壹啓ɡμā汾10億!!!!!！ぷ",
     "24:/#86QtT4vzLaoUN%买买买，→亰咚，﹎壹啓ɡμā汾10億!!!!!！ぷ",
 ];
-
-
+http.get("https://raw.fastgit.org/fjcqv/autojs_jd/main/助力.json");
+var Code = ocr_Res.body.json();
 console.info("共" + Code.length + "个助力码");
 for (var i = 0; i < Code.length;) {
     console.log("开始第" + (i + 1) + "个助力码");
@@ -48,7 +48,7 @@ for (var i = 0; i < Code.length;) {
         console.log("立即查看");
         text("立即查看").findOnce().click();
         j = 0;
-        while (j < 20 && textMatches("加入队伍加入队伍|为TA助力为TA助力").findOnce()== null) {
+        while (j < 20 && textMatches("加入队伍加入队伍|为TA助力为TA助力").findOnce() == null) {
             if (textMatches("加入队伍加入队伍|为TA助力为TA助力").exists()) {
                 break;
             }
@@ -63,8 +63,8 @@ for (var i = 0; i < Code.length;) {
             console.log("助力完成");
             i++;
         }
-    }    
-    home(); 
+    }
+    home();
     sleep(2000);
 }
 console.log("当前账户已助力完成");
