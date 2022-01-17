@@ -28,6 +28,7 @@ function main() {
         var thread = threads.start(task);
         //等待该线程完成
         thread.join(taskTimeLimit * 1000);
+        thread.interrupt();
         if (taskStatus) {
             taskStatus = false;
             appIndex += 1;
