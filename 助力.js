@@ -1,16 +1,15 @@
 auto.waitFor();
 console.show();
 var Code = [
-    "20:/￥28o9H0Xe6DDDW￥kankan婛※栋，❄赽咖叺莪哋隊⑤，躺赢賺葒笣~",
-    "25:/#982pr8e7JnQMr%☆しāī京岽逛逛☆，﹎壹啓ɡμā汾10億!!!!!！ぷ",
-    "20:/#18AO6DBmIqyUB@咑k鯨·=·鮗Ap/ρ，嚯！﹎壹啓ɡμā汾10億!!!!!！ぷ",
-    "26:/#3AG9ZB2BSITy3%后扌丁开乛倞崬，﹎壹啓ɡμā汾10億!!!!!！ぷ",
-    "24:/￥6EC4y7N71OIby%來jìnɡ倲逛逛╰→，﹎壹啓ɡμā汾10億!!!!!！ぷ",
-    "24:/#86QtT4vzLaoUN%买买买，→亰咚，﹎壹啓ɡμā汾10億!!!!!！ぷ",
 ];
-http.get("https://raw.fastgit.org/fjcqv/autojs_jd/main/助力.json");
-var Code = ocr_Res.body.json();
+try {
+    var h=http.get("https://raw.fastgit.org/fjcqv/autojs_jd/main/助力.json");
+    Code = h.body.json();
+} catch (error) {
+}
+
 console.info("共" + Code.length + "个助力码");
+
 for (var i = 0; i < Code.length;) {
     console.log("开始第" + (i + 1) + "个助力码");
     var j = 0;
