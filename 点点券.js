@@ -5,10 +5,10 @@
 auto.waitFor();
 console.show();
 var appList = [];
-var taskTimeLimit = 180;
+var taskTimeLimit = 300;
 var appIndex = 0;
 var taskStatus = false;
-
+var LauchAPPName="";
 main();
 function main() {
     解除限制();
@@ -54,9 +54,11 @@ function main() {
 
 function task() {
     console.info("开始运行", appList[appIndex]);
-    let start = new Date().getTime();//程序开始时间
-
-    app.launchApp(appList[appIndex]);
+    
+    let startTime = new Date().getTime();//程序开始时间
+    LauchAPPName=appList[appIndex];
+    app.launchApp(LauchAPPName);
+    sleep(3000);
     ActiveInterface();
     if (text("每日攒点点券").exists()) {
         console.info("任务列表检测正常");
@@ -120,8 +122,8 @@ function task() {
     sleep(1000);
     home();
     sleep(500);
-    let end = new Date().getTime();
-    console.log("运行结束,共耗时" + (parseInt(end - start)) / 1000 + "秒");
+    let endTime = new Date().getTime();
+    console.log("运行结束,共耗时" + (parseInt(endTime - startTime)) / 1000 + "秒");
     taskStatus = true;
 }
 
@@ -406,51 +408,8 @@ function ActiveInterface() {
             back();
             sleep(500);
             back();
-            if (LauchAPPName == "手动") {
-                console.log("请手动打开APP，以便进行下一步");
-                while (text("领京豆").findOnce() == null) {
-                    if (textContains("券后9.9").exists() |
-                        app.getAppName(currentPackage()) == "京东" | currentActivity() == "com.jingdong.app.mall.WebActivity") {
-                        break;
-                    }
-                    console.log("当前应用名:  " + app.getAppName(currentPackage()) + "\n"
-                        + "当前活动:  " + currentActivity() + "\n"
-                        + "未识别到京东相关界面，继续等待……");
-                    sleep(3000);
-                }
-                console.log("已检测到京东APP，等待下一步");
-            }
-            else {
-                if (IsSeparation == 1) {
-                    console.info("打开分身有术Pro，准备调用分身");
-                    app.launchApp("分身有术Pro");
-                    for (var t = 0; !id("tv_app_name").className("android.widget.TextView").text(LauchAPPName).exists(); t++) {
-                        console.log("等待识别分身……");
-                        console.log("当前应用名:  " + app.getAppName(currentPackage()) + "\n"
-                            + "未识别到<" + LauchAPPName + ">，继续等待……");
-                        sleep(3000);
-                        if (id("im_close_clear").exists()) {
-                            console.log("发现加速弹窗");
-                            id("im_close_clear").findOne().click();
-                            console.log("关闭加速弹窗");
-                        }
-                        if (t > 10) {
-                            console.log("识别超时，退出当前任务");
-                            return;
-                        }
-                    }
-                    if (id("tv_app_name").className("android.widget.TextView").text(LauchAPPName).exists()) {
-                        console.log("找到分身<" + LauchAPPName + ">");
-                        text(LauchAPPName).findOne().parent().click();
-                        console.log("分身已启动，等待活动检测……");
-                    }
-                }
-                else {
-                    console.info("打开" + LauchAPPName + "");
-                    app.launchApp(LauchAPPName);
-                    console.log("等待任务检测……");
-                }
-            }
+            app.launchApp(LauchAPPName);
+            console.log("等待任务检测……");
             sleep(3000);
         }
         if (i == 8 && className("android.view.View").desc("首页").exists()) {

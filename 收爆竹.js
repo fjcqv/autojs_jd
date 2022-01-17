@@ -55,6 +55,7 @@ function main() {
 function task() {
     console.info("开始运行", appList[appIndex]);
     app.launchApp(appList[appIndex]);
+    let startTime = new Date().getTime();//程序开始时间
     while (1) {
         if (desc("浮层活动").exists()) {
             console.log("点击浮层活动");
@@ -75,6 +76,8 @@ function task() {
         }
         sleep(500);
     }
+    let endTime = new Date().getTime();
+    console.log("运行结束,共耗时" + (parseInt(endTime - startTime)) / 1000 + "秒");
     taskStatus = true;
 }
 
