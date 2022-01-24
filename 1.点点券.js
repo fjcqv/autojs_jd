@@ -5,39 +5,50 @@
 auto.waitFor();
 console.show();
 var appList = [];
+var config = storages.create("jd");
 var taskTimeLimit = 300;
 var appIndex = 0;
-var taskStatus = false;
-var LauchAPPName="";
+var LauchAPPName = "";
 main();
 function main() {
     解除限制();
-    //获取所有京东
-    var pm = context.getPackageManager()
-    let list = pm.getInstalledApplications(0)
-    for (let i = 0; i < list.size(); i++) {
-        let p = list.get(i);
-        if (p.label.match(/京东[0-9]*$/)) {
-            appList.push(p.label);
+    if (config.contains("app")) {        
+        appList = config.get("app");
+        console.log("读取运行配置：",appList)
+    } else {
+        //获取所有京东
+        var pm = context.getPackageManager()
+        let list = pm.getInstalledApplications(0)
+        for (let i = 0; i < list.size(); i++) {
+            let p = list.get(i);
+            if (p.label.match(/京东[0-9]*$/)) {
+                appList.push(p.label);
+            }
+            appList.sort();
         }
-        appList.sort();
+        var i = dialogs.select("请选择运行", appList.concat("所有"));
+        if (i < appList.length) {
+            appList = new Array(appList[i]);
+            toast("单独运行" + appList[0]);
+        } else {
+            toast("运行所有京东");
+        }
     }
     //运行京东
     while (appIndex < appList.length) {
 
         var thread = threads.start(task);
         //等待该线程完成
-        thread.join(taskTimeLimit * 1000);
-        thread.interrupt();
-        if (taskStatus) {
-            taskStatus = false;
-            appIndex += 1;
-        } else {
+        thread.join(taskTimeLimit * 1000);        
+        if (thread.isAlive()) {
+            thread.interrupt();
             console.error("运行失败，重新运行");
             for (var i = 0; i < 3; i++) {
                 back();
                 sleep(1000);
             }
+        } else {
+            appIndex += 1;
         }
 
     }
@@ -55,9 +66,9 @@ function main() {
 
 function task() {
     console.info("开始运行", appList[appIndex]);
-    
+
     let startTime = new Date().getTime();//程序开始时间
-    LauchAPPName=appList[appIndex];
+    LauchAPPName = appList[appIndex];
     app.launchApp(LauchAPPName);
     sleep(3000);
     ActiveInterface();
@@ -125,7 +136,6 @@ function task() {
     sleep(500);
     let endTime = new Date().getTime();
     console.log("运行结束,共耗时" + (parseInt(endTime - startTime)) / 1000 + "秒");
-    taskStatus = true;
 }
 
 
