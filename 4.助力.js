@@ -2,6 +2,7 @@ auto.waitFor();
 console.show();
 
 var appList = [];
+var debugMode=String(engines.myEngine().getSource()).includes("remote:");
 var config = storages.create("jd");
 var taskTimeLimit = 180;
 var appIndex = 0;
@@ -62,7 +63,7 @@ function main() {
 
     }
     toast("任务完成");
-    if (!String(engines.myEngine().getSource()).includes("remote:")) {
+    if (!debugMode) {
         recents();
         var w = id("clear_all_recents_image_button").findOne(6000);
         //如果找到控件则点击

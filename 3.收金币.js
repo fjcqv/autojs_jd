@@ -5,6 +5,7 @@
 auto.waitFor();
 console.show();
 var appList = [];
+var debugMode=String(engines.myEngine().getSource()).includes("remote:");
 var config = storages.create("jd");
 var taskTimeLimit = 60;
 var appIndex = 0;
@@ -12,7 +13,7 @@ var appIndex = 0;
 main();
 function main() {
     解除限制();
-    if (config.contains("app")) {
+    if (!debugMode && config.contains("app")) {
         appList = config.get("app");
         console.log("读取运行配置：", appList)
     } else {
@@ -53,7 +54,7 @@ function main() {
 
     }
     toast("任务完成");
-    if (!String(engines.myEngine().getSource()).includes("remote:")) {
+    if (!debugMode) {
         recents();
         var w = id("clear_all_recents_image_button").findOne(6000);
         //如果找到控件则点击
@@ -86,6 +87,7 @@ function task() {
             clickCollect.parent().click();
             sleep(1000);
             let h = new Date().getHours();
+            //组队领取，未完成
             if (h >= 20 && h < 22) {
                 id("homeBtnTeam").findOne().click();
                 textContains("明天8点再来吧~").waitFor();
@@ -109,19 +111,11 @@ function task() {
             }
             //尝试升级
             try {
-                let upneed = textStartsWith("消耗").findOne(2000).text().match(/\d+/g).join();
-                let upSum = textContains("我的爆竹").findOne(2000).parent().child(2).text().match(/\d+/g).join();
-                upneed = parseInt(upneed);
-                upSum = parseInt(upSum);
-                let upcnt = Math.floor(upSum / upneed);
-                console.log("当前爆竹：", upSum);
-                let updateBtn = textStartsWith("每次消耗").findOne(2000).parent();
-                if (updateBtn && upcnt) {
-                    console.log("升级" + upcnt + "次");
-                    for (let i = 0; i < upcnt; i++) {
-                        updateBtn.click(); sleep(1000);
-                    }
+                let updateBtn = textStartsWith("抽奖 ").findOne(2000);
+                for (let i = 0; i < 5; i++) {
+                    updateBtn.click(); sleep(1000);
                 }
+
 
             } catch (error) {
             }

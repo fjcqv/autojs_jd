@@ -5,11 +5,13 @@
 
 auto.waitFor();
 console.show();
-var config = storages.create("jd");
+var debugMode = String(engines.myEngine().getSource()).includes("remote:");
 var appList = [];
+var config = storages.create("jd");
 var taskTimeLimit = 600;
 var appIndex = 0;
 var TASK_LIST = [
+    { match: /下单再得|参与城城|每邀1个/, isrun: false, func: nop },
     { match: /.*浏览.*s.*|.*浏览.*秒.*/, isrun: true, func: viewLongTime },
     { match: /去种草城逛大牌店铺/, isrun: true, func: interactionGrassPlanting },
     { match: /^浏览可得.*|玩AR游戏可得|每日6-9点打卡|去组队可得|浏览并关注可得/, isrun: true, func: viewAndFollow },
@@ -18,7 +20,7 @@ var TASK_LIST = [
     { match: /成功入会/, isrun: true, func: joinMember },
     { match: /浏览.*个品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
-    { match: /下单商品可得|参与城城|每邀1个/, isrun: false, func: nop },
+    
 ];
 
 var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
@@ -31,9 +33,11 @@ function main() {
         toastLog("请求截图权限失败")
         exit();
     }
-    if (config.contains("app")) {        
+    console.setSize(device.width / 2, device.height / 4);
+
+    if (!debugMode && config.contains("app")) {
         appList = config.get("app");
-        console.log("读取运行配置：",appList)
+        console.log("读取运行配置：", appList)
     } else {
         //获取所有京东
         var pm = context.getPackageManager()
@@ -93,7 +97,9 @@ function task() {
     let runCheck = 0;
     while (run) {
         try {
-            switch (getPage()) {
+            let page = getPage();
+            console.log("page:" + page)
+            switch (page) {
                 case 1: runCheck = 0; break;
                 case 2:
                     runCheck = 0;
@@ -102,6 +108,10 @@ function task() {
                 case 3:
                     runCheck = 0;
                     console.log("检查可以做的任务");
+                    if (debugMode) {
+                        doTask()
+                        break;
+                    }
                     if (doTask()) { doTaskFaild = 0; }
                     else { doTaskFaild++; if (doTaskFaild > 3) run = false; }
                     break;
@@ -132,11 +142,11 @@ function task() {
  */
 function getPage() {
 
-    if (textContains("累计任务奖励").exists()) {
+    if (text("累计任务奖励").exists()) {
 
         return 3;
     }
-    if (text("集爆竹炸年兽集爆竹炸年兽").exists()) {
+    if (text("分红：").exists()) {
         return 2;
     }
     if (desc("浮层活动").exists()) {
@@ -205,9 +215,9 @@ function activity() {
             textContains("开心收下").findOne().parent().click();
             sleep(1000);
         }
-        else if (textMatches(/00:.*后满|爆竹满了~~/).exists()) {
-            console.log("收集爆竹");
-            var clickCollect = textMatches(/00:.*后满|爆竹满了~~/).findOne();
+        else if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
+            console.log("收集金币");
+            var clickCollect = textMatches(/[0-2]{2}:.*后满|领取金币/).findOne();;
             clickCollect.parent().parent().child(2).click();
             sleep(5000);
         }
@@ -221,40 +231,9 @@ function activity() {
         back(); sleep(1000); return;
     }
     console.log("尝试点击任务");
-    let huodong_indexInParent_num_start = 18;
-    let huodong_indexInParent_num_end = 25;
     try {
-        var hd = text("集爆竹炸年兽集爆竹炸年兽").findOne(1000).parent().parent();
-        for (var i = 0; i < hd.children(); i++) {
-            if (hd.child(i).id() == "homeBtnTeam") {
-                huodong_indexInParent_num_start = i + 2;
-                huodong_indexInParent_num_end = i + 4;
-                if (huodong_indexInParent_num > huodong_indexInParent_num_end) {
-                    huodong_indexInParent_num = huodong_indexInParent_num_start;
-                }
-                break;
-            }
-        }
-        let huodong_indexInParent_num = huodong_indexInParent_num_start;
-        for (var i = 0; !text("累计任务奖励").exists(); huodong_indexInParent_num++) {
-            let button = className('android.view.View')
-                .depth(14)
-                .indexInParent(huodong_indexInParent_num)
-                .drawingOrder(0)
-                .clickable();
-            if (button.exists()) {
-                console.info("尝试点击任务", huodong_indexInParent_num)
-                var rect = button.findOne().bounds();
-                randomClick(rect.centerX(), rect.centerY());
-                sleep(1000);
-            }
-            sleep(1000);
-            if (i >= 10) {
-                console.log("未按时打开任务列表，退出当前任务");
-                return;
-            }
-        }
-
+        let hd = text("分红：").findOne(1000).parent().parent();
+        hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
     } catch (error) {
         console.log("打开任务界面失败");
     }
@@ -277,15 +256,15 @@ function doTask() {
         let task1item = allSelector[index];
         if (task1item.parent().child(0).className() != "android.widget.Image") continue;
         let task1b = task1item.bounds();
-        let task1color = images.pixel(task1img, task1b.left + task1b.width() / 8, task1b.top + task1b.height() / 2);
+        let task1color = images.pixel(task1img, task1b.left + task1b.width() / 16, task1b.top + task1b.height() / 2);
         //246,85,82 去完成 186,185,185 已完成 255,192,80 去领取
-        // console.info(index,"识别任务<" + task1item.parent().child(1).text() + ">");
-        // console.error(index,"识别任务状态:" + colors.toString(task1color) );
-        if (colors.isSimilar(task1color, "#BAB9B9", 20)) {
+        //console.info(index, "识别任务<" + task1item.parent().child(1).text() + ">");
+        //console.error(index, "识别任务状态:" + colors.toString(task1color));
+        if (colors.isSimilar(task1color, "#b0a7a4", 20)) {
             //console.log("已完成")
             continue;
         }
-        if (colors.isSimilar(task1color, "#FFC050", 20)) {
+        if (colors.isSimilar(task1color, "#f8a60c", 20)) {
             //console.log("去领取")
             taskState = 1;
             taskText1 = task1item.parent().child(1).text();
@@ -293,7 +272,7 @@ function doTask() {
             taskRect = task1item.bounds();
             break;
         }
-        if (colors.isSimilar(task1color, "#f68550", 20)) {
+        if (colors.isSimilar(task1color, "#fc6525", 20)) {
             //去完成
             //console.log("去完成")
             taskText1 = task1item.parent().child(1).text();
@@ -459,7 +438,7 @@ function nop() {
  */
 function viewLongTime() {
     while (1) {
-        if ((textStartsWith("获得").exists() && textEndsWith("爆竹").exists()) || text("已浏览").exists()) {
+        if ((textStartsWith("获得").exists() && textEndsWith("金币").exists()) || text("已浏览").exists()) {
             console.info("任务完成，返回");
             viewAndFollow(); sleep(500);
             break;
@@ -526,18 +505,35 @@ function viewSmallApp() {
  * @returns 
  */
 function interactionGrassPlanting() {
-    var count = 0;
-    while (true) {
-        if (className('android.view.View').indexInParent(4).depth(14).findOne().click()) {
-            // 重置计时
-            JUDGE_TIME = 0;
-            console.info("去逛逛");
-            sleep(2000);
-            if (back()) {
-                sleep(2000);
-                count = count + 1;
-                if (count == 3) {
-                    break;
+    let banner = textContains('喜欢').findOne(10000)
+    if (!banner) {
+        console.log('未能进入店铺列表。返回。')
+    } else {
+        let c = banner.text().match(/(\d)\/(\d*)/)
+        if (!c) {
+            c = 4 // 进行4次
+        } else {
+            c = c[2] - c[1]
+        }
+        sleep(2000)
+        console.log('进行', c, '次')
+        let like = textContains('喜欢').boundsInside(1, 0, device.width, device.height).findOnce()
+        if (!like) {
+            console.log('未能找到喜欢按钮。返回。')
+        } else {
+            let bound = [like.bounds().centerX(), like.bounds().centerY()]
+            console.log('喜欢按钮位于', bound)
+            for (let i = 0; i < c; i++) {
+                click(bound[0], bound[1])
+                console.log('浏览店铺页')
+                sleep(8000)
+                console.log('返回')
+                back()
+                sleep(5000)
+                let r = textContains('喜欢').findOnce()
+                if (!r) {
+                    back()
+                    sleep(5000)
                 }
             }
         }
@@ -580,64 +576,63 @@ function addMarketCar() {
 入会
  */
 function joinMember() {
-    textMatches(/.*会员授权协议.*|我的特权/).findOne(8000);
-    if (textContains('会员授权协议').exists()) {
-        ruhui();
+    let check = textMatches(/.*确认授权即同意.*|.*我的特权.*|.*立即开卡.*/).findOne(8000)
+    if (!check) {
+        console.log('无法找到入会按钮，判定为已经入会');
+
+    } else if (check.text().match(/我的特权/)) {
+        console.log('已经入会，返回');
     }
-    else if (textContains('我的特权').exists()) {
-        console.info("会员已领取，返回");
+    else {
+        //入会操作
+        ruhui(check)
     }
 
     viewAndFollow();
 }
-/**
- * 入会操作
- * @returns 返回 0:成功  1:失败
- */
-function ruhui() {
-    var ruhui_errtimemax = 3;
+function ruhui(check) {
+    sleep(2000);
+    if (check.text().match(/立即开卡/)) {
+        let btn = check.bounds()
+        console.log('即将点击开卡，自动隐藏控制台')
+        console.hide()
+        sleep(500)
+        click(btn.centerX(), btn.centerY())
+        sleep(500)
+        check = textMatches(/.*确认授权即同意.*/).findOne(8000)
+        sleep(2000)
+    }
 
-    headerXY = textContains('确认授权').findOne().parent().children()[5].bounds()
-    var rightx = headerXY.centerX();
-    var righty = headerXY.bottom - 5;
-    //console.info("x="+ rightx + "  y=" + righty)
-    textContains('确认授权').findOne().parent().children()[5].click()
-    click(rightx, righty)
-    sleep(500)
-    click(rightx + 100, righty + 100)
-    sleep(1000)
-
-    if (textContains('确认授权').exists()) {
-        console.info("入会失败");
-        ruhui_errtime++;
-        if (ruhui_errtime >= ruhui_errtimemax) {
-            ruhui_errtime = 0;
-            console.info("超过" + ruhui_errtimemax + "次，不再入会");
-            return 1;
-        } else {
-            console.info(ruhui_errtime + "次");
-            return 0;
-        }
-
-        return 1;
+    if (!check) {
+        console.log('无法找到入会按钮弹窗，加载失败')
+        return false
+    }
+    if (check.indexInParent() == 6) {
+        check = check.parent().child(5).bounds()
     } else {
-        back();
-        sleep(1000)
-        if (textContains('累计任务').exists()) {
-            console.info("入会成功");
-            ruhui_errtime = 0;
-            return 0;
-        } else {
-            console.info("入会失败");
-            ruhui_errtime++;
-            if (ruhui_errtime >= ruhui_errtimemax) {
-                ruhui_errtime = 0;
-                console.info("超过" + ruhui_errtimemax + "次，不再入会");
-                return 1;
-            } else {
-                console.info(ruhui_errtime + "次");
-                return 0;
-            }
+        check = check.parent().parent().child(5).bounds()
+    }
+
+    console.log('即将勾选授权，自动隐藏控制台', check)
+    console.hide()
+    sleep(500)
+    click(check.centerX(), check.centerY())
+    sleep(500)
+    try {
+        let j = textMatches(/^确认授权(并加入店铺会员)*$/).findOne(8000).bounds()
+        if (!j) {
+            console.log('无法找到入会按钮，失败')
+            return false
         }
+        click(j.centerX(), j.centerY())
+        sleep(500)
+        console.show()
+        return true
+    } catch (err) {
+        console.log('入会任务出现异常！停止完成入会任务。', err)
+        join = 0
+        sleep(500)
+        console.show()
+        return false
     }
 }
