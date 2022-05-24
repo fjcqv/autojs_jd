@@ -114,8 +114,8 @@ function task() {
             console.log("立即查看");
             text("立即查看").findOnce().click();
             j = 0;
-            while (j < 20 && textMatches("帮TA助力").findOnce() == null) {
-                if (textMatches("帮TA助力").exists()) {
+            while (j < 20 && textMatches("为TA助力为TA助力|加入队伍加入队伍").findOnce() == null) {
+                if (textMatches("为TA助力为TA助力|加入队伍加入队伍").exists()) {
                     break;
                 }
                 sleep(2000);
@@ -124,7 +124,7 @@ function task() {
             }
             if (j < 20) {
                 sleep(1000);
-                textMatches("帮TA助力").findOnce().click();
+                textMatches("为TA助力为TA助力|加入队伍加入队伍").findOnce().click();
                 sleep(2000);
                 console.log("助力完成");
                 i++;
