@@ -14,16 +14,16 @@ main();
 function main() {
     解除限制();
     //获取所有京东
-    if (config.contains("app")) {        
+    if (config.contains("app")) {
         appList = config.get("app");
-        console.log("读取运行配置：",appList)
+        console.log("读取运行配置：", appList)
     } else {
         //获取所有京东
         var pm = context.getPackageManager()
         let list = pm.getInstalledApplications(0)
         for (let i = 0; i < list.size(); i++) {
             let p = list.get(i);
-            if (p.label.match(/京东[0-9]*$/)) {
+            if (p.label.match(/京东[0-9]*$|京东-.*$/)) {
                 appList.push(p.label);
             }
             appList.sort();
@@ -62,14 +62,16 @@ function main() {
 
     }
     toast("任务完成");
-    recents();
-    var w = id("clear_all_recents_image_button").findOne(6000);
-    //如果找到控件则点击
-    if (w != null) {
-        w.click();
-    } else {
-        //否则提示没有找到
-        toast("一键清理失败");
+    if (!String(engines.myEngine().getSource()).includes("remote:")) {
+        recents();
+        var w = id("clear_all_recents_image_button").findOne(6000);
+        //如果找到控件则点击
+        if (w != null) {
+            w.click();
+        } else {
+            //否则提示没有找到
+            toast("一键清理失败");
+        }
     }
 }
 function task() {

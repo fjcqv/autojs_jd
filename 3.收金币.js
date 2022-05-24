@@ -12,16 +12,16 @@ var appIndex = 0;
 main();
 function main() {
     解除限制();
-    if (config.contains("app")) {        
+    if (config.contains("app")) {
         appList = config.get("app");
-        console.log("读取运行配置：",appList)
+        console.log("读取运行配置：", appList)
     } else {
         //获取所有京东
         var pm = context.getPackageManager()
         let list = pm.getInstalledApplications(0)
         for (let i = 0; i < list.size(); i++) {
             let p = list.get(i);
-            if (p.label.match(/京东[0-9]*$/)) {
+            if (p.label.match(/京东[0-9]*$|京东-.*$/)) {
                 appList.push(p.label);
             }
             appList.sort();
@@ -53,15 +53,18 @@ function main() {
 
     }
     toast("任务完成");
-    recents();
-    var w = id("clear_all_recents_image_button").findOne(6000);
-    //如果找到控件则点击
-    if (w != null) {
-        w.click();
-    } else {
-        //否则提示没有找到
-        toast("一键清理失败");
+    if (!String(engines.myEngine().getSource()).includes("remote:")) {
+        recents();
+        var w = id("clear_all_recents_image_button").findOne(6000);
+        //如果找到控件则点击
+        if (w != null) {
+            w.click();
+        } else {
+            //否则提示没有找到
+            toast("一键清理失败");
+        }
     }
+
 }
 
 function task() {
@@ -77,10 +80,10 @@ function task() {
             randomClick(huodong.centerX(), huodong.centerY());
             sleep(1000);
         }
-        if (textMatches(/[0-2]{2}:.*后满|爆竹满了~~/).exists()) {
-            console.log("收集爆竹");
-            var clickCollect = textMatches(/[0-2]{2}:.*后满|爆竹满了~~/).findOne();
-            clickCollect.parent().parent().child(2).click();
+        if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
+            console.log("领取金币");
+            var clickCollect = textMatches(/[0-2]{2}:.*后满|领取金币/).findOne();
+            clickCollect.parent().click();
             sleep(1000);
             let h = new Date().getHours();
             if (h >= 20 && h < 22) {
@@ -106,12 +109,12 @@ function task() {
             }
             //尝试升级
             try {
-                let upneed = textStartsWith("每次消耗").findOne(2000).text().match(/\d+/g).join();
+                let upneed = textStartsWith("消耗").findOne(2000).text().match(/\d+/g).join();
                 let upSum = textContains("我的爆竹").findOne(2000).parent().child(2).text().match(/\d+/g).join();
                 upneed = parseInt(upneed);
                 upSum = parseInt(upSum);
                 let upcnt = Math.floor(upSum / upneed);
-                console.log("当前爆竹：",upSum);
+                console.log("当前爆竹：", upSum);
                 let updateBtn = textStartsWith("每次消耗").findOne(2000).parent();
                 if (updateBtn && upcnt) {
                     console.log("升级" + upcnt + "次");

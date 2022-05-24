@@ -95,8 +95,7 @@ function task() {
                     }
                     let Button = Buttons[i]
                     ButtonText = Button.child(0).child(0).child(0).text()
-                    console.log(ButtonText)
-                    if (ButtonText.match(/[+][1-9].*/)) {
+                    if (ButtonText.match(/[+][1-9]0.*/)) {
                         console.log("第" + i + "次收点点券");
                         //有2组任务的时候，多停留1秒
                         if (textStartsWith("浏览2组").exists()) {
@@ -190,16 +189,8 @@ function RunAllTask() {
                 | text("浏览精选商品").findOnce().parent().child(3).text() == "继续完成")) {
                 RunTask(1, "浏览精选商品", 1);
             }
-            else if (text("关注精选频道").exists() && (text("关注精选频道").findOnce().parent().child(3).text() == "领取任务"
-                | text("关注精选频道").findOnce().parent().child(3).text() == "继续完成")) {
-                RunTask(1, "关注精选频道", 1);
-            }
             else if (text("浏览精选活动3s").exists() && (text("浏览精选活动3s").findOnce().parent().child(3).text() == "领取任务"
                 | text("浏览精选活动3s").findOnce().parent().child(3).text() == "继续完成")) {
-                RunTask(1, "浏览精选活动3s", 1);
-            }
-            else if (text("浏览精选活动3s(第2组)").exists() && (text("浏览精选活动3s(第2组)").findOnce().parent().child(3).text() == "领取任务"
-                | text("浏览精选活动3s(第2组)").findOnce().parent().child(3).text() == "继续完成")) {
                 RunTask(1, "浏览精选活动3s", 1);
             }
             else if (textStartsWith("关注浏览10s").exists() && (textStartsWith("关注浏览10s").findOnce().parent().child(3).text() == "领取任务"
@@ -303,10 +294,6 @@ function RunTask(LevelNum, TaskName, KeyKind) {
             var t = 4
         } else if (textContains("/3）").exists()) {
             var t = 3
-        } else if (textContains("/2）").exists()) {
-            var t = 2
-        } else if (textContains("/1）").exists()) {
-            var t = 1
         }
         if (KeyKind == 1) {
             for (var i = 0; i < t; i++) {
@@ -330,9 +317,9 @@ function RunTask(LevelNum, TaskName, KeyKind) {
             console.log("浏览完成");
         } else if (KeyKind == 2) {
             for (var i = 0; text("浏览并关注").exists(); i++) {
-                console.log("第" + (i + 1) + "次关注浏览");//关注浏览10s
+                console.log("第" + (i + 1) + "次关注浏览");
                 className("android.view.View").textStartsWith(TaskKey).findOnce().parent().child(2).child(0).click();
-                let Button = text("已完成浏览").findOne(15000);
+                let Button = text("已完成浏览").findOnce(15000).parent();
                 if (!Button) {
                     if (!className("android.view.View").textStartsWith(TaskKey).exists()) {
                         back();
@@ -340,8 +327,7 @@ function RunTask(LevelNum, TaskName, KeyKind) {
                     }
                 }
                 else {
-                    Button.parent().click();
-                    sleep(1000);
+                    Button.click();
                 }
                 for (var ii = 0; !className("android.view.View").textStartsWith(TaskKey).exists(); ii++) {
                     console.log("返回异常，再次尝试返回");
