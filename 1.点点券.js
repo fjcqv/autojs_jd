@@ -5,7 +5,7 @@
 auto.waitFor();
 console.show();
 var appList = [];
-var debugMode=String(engines.myEngine().getSource()).includes("remote:");
+var debugMode = String(engines.myEngine().getSource()).includes("remote:");
 var config = storages.create("jd");
 var taskTimeLimit = 300;
 var appIndex = 0;
@@ -93,6 +93,7 @@ function task() {
                 for (var i = 1; i < Buttons.length - 2; i++) {
                     if (i == 1) {
                         console.info("发现可收取点点券");
+                        console.hide();
                     }
                     let Button = Buttons[i]
                     ButtonText = Button.child(0).child(0).child(0).text()
@@ -116,6 +117,7 @@ function task() {
                         else {
                             console.log("收取成功");
                             sleep(500);
+                            console.show();
                         }
                         //这组任务是收取之后才出现，故再做一次判断
                         if (text("领取任务").exists() | text("继续完成").exists()) {
@@ -286,8 +288,12 @@ function RunTask(LevelNum, TaskName, KeyKind) {
     }
 
     if (KeyKind == 1 | KeyKind == 2 | KeyKind == 3) {
-        var TaskKey = TaskName + "（"
-        className("android.view.View").textContains(TaskKey).waitFor();
+        var TaskKey = TaskName + "（";
+        let w = className("android.view.View").textContains(TaskKey).findOne(3000);
+        if (w == null) {
+            console.error("任务异常，退出任务");
+            return;
+        }
         if (textContains("/10）").exists()) {
             var t = 10
         } else if (textContains("/9）").exists()) {

@@ -20,11 +20,11 @@ var TASK_LIST = [
     { match: /成功入会/, isrun: true, func: joinMember },
     { match: /浏览.*个品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
-    
+
 ];
 
 var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
-
+var nowTime;
 
 main();
 function main() {
@@ -95,10 +95,15 @@ function task() {
     let run = true;
     let doTaskFaild = 0;
     let runCheck = 0;
+    nowTime = new Date().getTime();
     while (run) {
         try {
             let page = getPage();
             console.log("page:" + page)
+            let tmpTime = new Date().getTime()
+            let timerPage = parseInt(tmpTime - nowTime)
+            nowTime = tmpTime;
+            // console.log(timerPage)
             switch (page) {
                 case 1: runCheck = 0; break;
                 case 2:
@@ -166,66 +171,62 @@ function activity() {
     console.log("成功进入活动界面");
     console.log("等待加载弹窗……");
     let pop = execFuncWait(function () {
-        while (textContains("继续环游").exists() | textContains("立即抽奖").exists() | textContains("开启今日环游").exists() | textContains("点我签到").exists() | textContains("开心收下").exists()) {
-            sleep(1000);
-            if (textContains("继续环游").exists()) {
-                console.log("继续环游");
-                textContains("继续环游").findOne().click();
-                sleep(500);
-            } else if (textContains("立即抽奖").exists()) {
-                console.log("关闭立即抽奖");
-                textContains("立即抽奖").findOne().parent().child(1).click();
-                sleep(500);
-            } else if (textContains("开启今日环游").exists()) {
-                console.log("开启今日环游");
-                textContains("开启今日环游").findOne().click();
-                sleep(1000);
-            } else if (textContains("点我签到").exists()) {
-                console.log("点我签到");
-                textContains("点我签到").findOne().parent().click();
-                sleep(1000);
-                textContains("开心收下").waitFor();
-                textContains("开心收下").findOne().parent().click();
-                sleep(1000);
-            } else if (text("开心收下开心收下").exists()) {
-                console.log("开心收下");
-                text("开心收下开心收下").findOne().click();
-                sleep(1000);
-            } else if (textContains("开心收下").exists()) {
-                console.log("开心收下");
-                textContains("开心收下").findOne().parent().click();
-                sleep(1000);
-            } else {
-                console.log("暂无可处理弹窗");
-                break;
-            }
-            sleep(1000);
-        }
-        console.log("如还有弹窗，请手动处理");
-        sleep(3000);
+        // while (textContains("继续环游 ").exists() | textContains("立即抽奖 ").exists() | textContains("开启今日抽奖 ").exists() | textContains("点我签到 ").exists() | textContains("开心收下 ").exists()) {
+        //     sleep(1000);
+        //     if (textContains("继续环游 ").exists()) {
+        //         console.log("继续环游");
+        //         textContains("继续环游 ").findOne().child(0).click();
+        //         sleep(500);
+        //     } else if (textContains("立即抽奖 ").exists()) {
+        //         console.log("关闭立即抽奖");
+        //         textContains("立即抽奖 ").findOne().parent().child(0).click();
+        //         sleep(500);
+        //     } else if (textContains("开启今日抽奖 ").exists()) {
+        //         console.log("开启今日抽奖");
+        //         textContains("开启今日抽奖 ").findOne().parent().child(0).click();
+        //         sleep(1000);
+        //     } else if (textContains("点我签到 ").exists()) {
+        //         console.log("点我签到");
+        //         textContains("点我签到 ").findOne().child(0).click();
+        //         sleep(1000);
+        //         textContains("开心收下 ").waitFor();
+        //         textContains("开心收下 ").findOne().child(0).click();
+        //         sleep(1000);
+        //     } else if (textContains("开心收下 ").exists()) {
+        //         console.log("开心收下");
+        //         textContains("开心收下 ").findOne().child(0).click();
+        //         sleep(1000);
+        //     } else {
+        //         console.log("暂无可处理弹窗");
+        //         break;
+        //     }
+        //     sleep(1000);
+        // }
+        // console.log("如还有弹窗，请手动处理");
+        // sleep(3000);
 
-        if (text("立即前往").exists()) {
-            console.log("前往签到");
-            textContains("立即前往").findOne().parent().click();
-            sleep(500);
-            console.log("点我签到");
-            textContains("点我签到").findOne().parent().click();
-            sleep(1000);
-            textContains("开心收下").waitFor();
-            textContains("开心收下").findOne().parent().click();
-            sleep(1000);
-        }
-        else if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
+        // if (text("立即前往").exists()) {
+        //     console.log("前往签到");
+        //     textContains("立即前往").findOne().parent().click();
+        //     sleep(500);
+        //     console.log("点我签到");
+        //     textContains("点我签到").findOne().parent().click();
+        //     sleep(1000);
+        //     textContains("开心收下").waitFor();
+        //     textContains("开心收下").findOne().parent().click();
+        //     sleep(1000);
+        // }
+        if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
             console.log("收集金币");
             var clickCollect = textMatches(/[0-2]{2}:.*后满|领取金币/).findOne();;
             clickCollect.parent().parent().child(2).click();
-            sleep(5000);
-        }
-
-        if (text("放入我的＞我的优惠券").exists()) {
-            text("放入我的＞我的优惠券").findOne().parent().parent().child(0).click();
             sleep(1000);
         }
+
+        // if (text("放入我的＞我的优惠券").exists()) {
+        //     text("放入我的＞我的优惠券").findOne().parent().parent().child(0).click();
+        //     sleep(1000);
+        // }
     }, 30 * 1000);
     if (pop == false) {
         back(); sleep(1000); return;
@@ -234,6 +235,13 @@ function activity() {
     try {
         let hd = text("分红：").findOne(1000).parent().parent();
         hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
+        if (text("累计任务奖励").findOne(2000) == null) {
+            home();
+            app.launchApp(appList[appIndex]);
+        }
+        if (text("累计任务奖励").findOne(2000) == null) {
+            console.log("打开任务界面失败");
+        }
     } catch (error) {
         console.log("打开任务界面失败");
     }
@@ -242,6 +250,7 @@ function activity() {
 /*
 做任务，做完返回0
 */
+let prevTaskText1 = "";
 function doTask() {
     let index;
     let taskState = 0;
@@ -250,6 +259,7 @@ function doTask() {
     let taskRect;
     let task2;
     if (!text("累计任务奖励").exists()) return 1;
+
     let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
     let task1img = captureScreen();
     for (index = 0; index < allSelector.length; index++) {
@@ -292,15 +302,28 @@ function doTask() {
     task1img.recycle();
     //任务完成
     if (index == allSelector.length) return 0;
+    //webview刷新bug修复
+    if (prevTaskText1 == taskText1) {
+        console.log("与上次任务一样，刷新webview");
+        prevTaskText1 = "";
+        home();
+        app.launchApp(appList[appIndex]);
+        return 1;
+    }
+    else {
+        prevTaskText1 = taskText1;
+    }
+    //处理任务
     if (taskState == 1) {
         randomClick(taskRect.centerX(), taskRect.centerY());
     }
     else {
-        //
+
         console.log("开始任务：", taskText1);
+        //console.log(taskRect)
         randomClick(taskRect.centerX(), taskRect.centerY());
         sleep(1000);
-        if (!execFuncWait(task2.func, 30 * 1000)) {
+        if (!execFuncWait(task2.func, 35 * 1000)) {
             console.error("运行失败:", taskText1);
             viewAndFollow();
         }
@@ -454,17 +477,13 @@ function viewLongTime() {
 function viewBottomShop() {
     console.info("进入首页品牌墙任务");
     sleep(1000);
-    var allPinpai = className('android.widget.Image')
-        .depth(19)
-        .indexInParent(0)
-        .drawingOrder(0)
-        .find();
+    let allPinpai = textContains('!q70').find();
     if (allPinpai.length > 10) {
-        for (var i = 0; i < 3; i++) {
-            console.log("第" + (i + 1) + "个店铺");
+        for (var i = 5; i < 10; i++) {
+            console.log("第" + (i - 4) + "个店铺");
             allPinpai[i].parent().parent().click();
             sleep(3500);
-            for (var ii = 0; !text("集爆竹炸年兽集爆竹炸年兽").exists(); ii++) {
+            for (var ii = 0; !textContains('!q70').exists(); ii++) {
                 console.log("返回");
                 back();
                 sleep(1500);

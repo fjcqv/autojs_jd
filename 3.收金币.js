@@ -5,7 +5,7 @@
 auto.waitFor();
 console.show();
 var appList = [];
-var debugMode=String(engines.myEngine().getSource()).includes("remote:");
+var debugMode = String(engines.myEngine().getSource()).includes("remote:");
 var config = storages.create("jd");
 var taskTimeLimit = 60;
 var appIndex = 0;
@@ -89,24 +89,16 @@ function task() {
             let h = new Date().getHours();
             //组队领取，未完成
             if (h >= 20 && h < 22) {
-                id("homeBtnTeam").findOne().click();
-                textContains("明天8点再来吧~").waitFor();
-                sleep(1000);
-
-                if (text("明天8点再来吧~").exists()) {
-                    sleep(1000);
-                    if (text("开心收下开心收下").exists()) {
-                        console.log("开心收下");
-                        text("开心收下开心收下").findOne().parent().click();
-                        sleep(1000);
+                try {
+                    text("分红：").findOne(1000).parent().parent().child(4).click();
+                    let w = textMatches(/立即领奖|明早8点开始组队哦/).findOne(6000);
+                    if (w != null) {
+                        if (w.text() == "立即领奖") {
+                            text("开心收下开心收下").findOne(8000).parent().click();
+                        }
+                        back();
                     }
-                    if (text("去开奖").exists()) {
-                        console.log("去开奖");
-                        text("去开奖").findOne().parent().click();
-                        sleep(1000);
-                        textContains("直接收下").waitFor();
-                        textContains("直接收下").findOne().parent().click();
-                    }
+                } catch (error) {
                 }
             }
             //尝试升级
