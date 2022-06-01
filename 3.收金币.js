@@ -22,7 +22,7 @@ function main() {
         let list = pm.getInstalledApplications(0)
         for (let i = 0; i < list.size(); i++) {
             let p = list.get(i);
-            if (p.label.match(/京东[0-9]*$|京东-.*$/)) {
+            if (p.label.match(/京东[0-9]*$|京东[-–].*$/)) {
                 appList.push(p.label);
             }
             appList.sort();

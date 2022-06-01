@@ -11,16 +11,15 @@ var config = storages.create("jd");
 var taskTimeLimit = 600;
 var appIndex = 0;
 var TASK_LIST = [
-    { match: /下单再得|参与城城|每邀1个/, isrun: false, func: nop },
+    { match: /下单再得|返现金|每邀1个/, isrun: false, func: nop },
     { match: /.*浏览.*s.*|.*浏览.*秒.*/, isrun: true, func: viewLongTime },
     { match: /去种草城逛大牌店铺/, isrun: true, func: interactionGrassPlanting },
-    { match: /^浏览可得.*|玩AR游戏可得|每日6-9点打卡|去组队可得|浏览并关注可得/, isrun: true, func: viewAndFollow },
-    { match: /累计浏览并加购/, isrun: true, func: addMarketCar },
-    { match: /累计浏览.*个商品/, isrun: true, func: addMarketCar },
+    { match: /^浏览可得.*|玩AR游戏可得|浏览并关注可得/, isrun: true, func: viewAndFollow },
+    { match: /累计浏览并加购|累计浏览.*个商品/, isrun: true, func: addMarketCar },
     { match: /成功入会/, isrun: true, func: joinMember },
     { match: /浏览.*个品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
-
+    { match: /点击首页浮层|去组队可得|每日6-9点打卡/, isrun: true, func: nop },
 ];
 
 var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
@@ -44,7 +43,7 @@ function main() {
         let list = pm.getInstalledApplications(0)
         for (let i = 0; i < list.size(); i++) {
             let p = list.get(i);
-            if (p.label.match(/京东[0-9]*$|京东-.*$/)) {
+            if (p.label.match(/京东[0-9]*$|京东[-–].*$/)) {
                 appList.push(p.label);
             }
             appList.sort();
@@ -251,6 +250,86 @@ function activity() {
 做任务，做完返回0
 */
 let prevTaskText1 = "";
+// function doTask() {
+//     let index;
+//     let taskState = 0;
+//     let taskText1 = "";
+//     let taskText2 = "";
+//     let taskRect;
+//     let task2;
+//     if (!text("累计任务奖励").exists()) return 1;
+
+//     let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
+//     let task1img = captureScreen();
+//     for (index = 0; index < allSelector.length; index++) {
+//         let task1item = allSelector[index];
+//         if (task1item.parent().child(0).className() != "android.widget.Image") continue;
+//         let task1b = task1item.bounds();
+//         let task1color = images.pixel(task1img, task1b.left + task1b.width() / 16, task1b.top + task1b.height() / 2);
+//         //246,85,82 去完成 186,185,185 已完成 255,192,80 去领取
+//         console.info(index, "识别任务<" + task1item.parent().child(1).text() + ">");
+//         console.error(index, "识别任务状态:" + colors.toString(task1color));
+//         if (colors.isSimilar(task1color, "#b0a7a4", 20)) {
+//             //console.log("已完成")
+//             continue;
+//         }
+//         if (colors.isSimilar(task1color, "#f8a60c", 20)) {
+//             //console.log("去领取")
+//             taskState = 1;
+//             taskText1 = task1item.parent().child(1).text();
+//             taskText2 = task1item.parent().child(2).text();
+//             taskRect = task1item.bounds();
+//             break;
+//         }
+//         if (colors.isSimilar(task1color, "#fc6525", 20)) {
+//             //去完成
+//             //console.log("去完成")
+//             taskText1 = task1item.parent().child(1).text();
+//             taskText2 = task1item.parent().child(2).text();
+//             let findText = taskText2 + taskText1;
+//             taskRect = task1item.bounds();
+//             task2 = TASK_LIST.find(s => { return s.match.exec(findText) != null });
+//             if (task2) {
+//                 if (task2.isrun) break;
+//                 continue;
+
+//             } else {
+//                 console.error("没有处理：", taskText2);
+//             }
+//         }
+//     }
+//     task1img.recycle();
+//     //任务完成
+//     if (index == allSelector.length) return 0;
+//     //webview刷新bug修复
+//     if (prevTaskText1 == taskText1) {
+//         console.log("与上次任务一样，刷新webview");
+//         prevTaskText1 = "";
+//         home();
+//         app.launchApp(appList[appIndex]);
+//         return 1;
+//     }
+//     else {
+//         prevTaskText1 = taskText1;
+//     }
+//     //处理任务
+//     if (taskState == 1) {
+//         randomClick(taskRect.centerX(), taskRect.centerY());
+//     }
+//     else {
+
+//         console.log("开始任务：", taskText1);
+//         //console.log(taskRect)
+//         randomClick(taskRect.centerX(), taskRect.centerY());
+//         sleep(1000);
+//         if (!execFuncWait(task2.func, 35 * 1000)) {
+//             console.error("运行失败:", taskText1);
+//             viewAndFollow();
+//         }
+//     }
+//     return 1;
+
+// }
 function doTask() {
     let index;
     let taskState = 0;
@@ -258,56 +337,44 @@ function doTask() {
     let taskText2 = "";
     let taskRect;
     let task2;
+    let task1item;
     if (!text("累计任务奖励").exists()) return 1;
 
     let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
-    let task1img = captureScreen();
     for (index = 0; index < allSelector.length; index++) {
-        let task1item = allSelector[index];
+        task1item = allSelector[index];
         if (task1item.parent().child(0).className() != "android.widget.Image") continue;
-        let task1b = task1item.bounds();
-        let task1color = images.pixel(task1img, task1b.left + task1b.width() / 16, task1b.top + task1b.height() / 2);
-        //246,85,82 去完成 186,185,185 已完成 255,192,80 去领取
-        //console.info(index, "识别任务<" + task1item.parent().child(1).text() + ">");
-        //console.error(index, "识别任务状态:" + colors.toString(task1color));
-        if (colors.isSimilar(task1color, "#b0a7a4", 20)) {
-            //console.log("已完成")
-            continue;
-        }
-        if (colors.isSimilar(task1color, "#f8a60c", 20)) {
-            //console.log("去领取")
-            taskState = 1;
-            taskText1 = task1item.parent().child(1).text();
-            taskText2 = task1item.parent().child(2).text();
-            taskRect = task1item.bounds();
-            break;
-        }
-        if (colors.isSimilar(task1color, "#fc6525", 20)) {
-            //去完成
-            //console.log("去完成")
-            taskText1 = task1item.parent().child(1).text();
-            taskText2 = task1item.parent().child(2).text();
-            let findText = taskText2 + taskText1;
-            taskRect = task1item.bounds();
-            task2 = TASK_LIST.find(s => { return s.match.exec(findText) != null });
-            if (task2) {
-                if (task2.isrun) break;
-                continue;
+        taskText1 = task1item.parent().child(1).text();
+        taskText2 = task1item.parent().child(2).text();
+        taskRect = task1item.bounds();
+        let r = taskText1.match(/(\d)\/(\d*)/);
+        if (!r) continue;
+        let tCount = (r[2] - r[1]);
+        if (tCount == 0) continue;
 
-            } else {
-                console.error("没有处理：", taskText2);
-            }
+        task2 = TASK_LIST.find(s => { return s.match.exec(taskText2 + taskText1) != null });
+        if (task2) {
+            if (task2.isrun) break;
+            continue;
+        } else {
+            console.error("没有处理：", taskText2);
         }
     }
-    task1img.recycle();
     //任务完成
     if (index == allSelector.length) return 0;
     //webview刷新bug修复
     if (prevTaskText1 == taskText1) {
         console.log("与上次任务一样，刷新webview");
         prevTaskText1 = "";
-        home();
-        app.launchApp(appList[appIndex]);
+        try {
+            text("累计任务奖励").findOne(2000).parent().child(1).click();
+            sleep(1000);
+            home();
+            app.launchApp(appList[appIndex]);
+        } catch (error) {
+
+        }
+
         return 1;
     }
     else {
@@ -315,13 +382,15 @@ function doTask() {
     }
     //处理任务
     if (taskState == 1) {
-        randomClick(taskRect.centerX(), taskRect.centerY());
+        task1item.click();
+       // randomClick(taskRect.centerX(), taskRect.centerY());
     }
     else {
 
         console.log("开始任务：", taskText1);
         //console.log(taskRect)
-        randomClick(taskRect.centerX(), taskRect.centerY());
+        task1item.click();
+        //randomClick(taskRect.centerX(), taskRect.centerY());
         sleep(1000);
         if (!execFuncWait(task2.func, 35 * 1000)) {
             console.error("运行失败:", taskText1);
