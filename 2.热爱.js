@@ -28,10 +28,10 @@ var nowTime;
 main();
 function main() {
     解除限制();
-    if (!requestSC()) {
-        toastLog("请求截图权限失败")
-        exit();
-    }
+    // if (!requestSC()) {
+    //     toastLog("请求截图权限失败")
+    //     exit();
+    // }
     console.setSize(device.width / 2, device.height / 4);
 
     if (!debugMode && config.contains("app")) {
@@ -120,12 +120,29 @@ function task() {
                     else { doTaskFaild++; if (doTaskFaild > 3) run = false; }
                     break;
                 default:
-                    if (currentPackage() != packageName) {
+                    let currentPackageName = currentPackage();
+                    if (currentPackageName != packageName) {
                         runCheck++;
+                        console.log(runCheck)
                         if (runCheck > 30) {
+                            runCheck = 0;
                             console.error("出现异常，重启应用");
                             stopApp(appList[appIndex]);
                             app.launchApp(appList[appIndex]);
+                        }
+                    }
+                    else if (currentPackageName == "com.tencent.mm" || currentPackageName == "com.jd.jrapp") {
+                        runCheck++;
+                        if (runCheck > 5) {
+                            runCheck = 0;
+                            console.error("跳转到微信和京东金融，重新进");
+                            app.launchApp(appList[appIndex]);
+                        }
+                    }
+                    else {
+                        if (id("app").exists() && text("立即下载").exists()) {
+                            back();
+                            sleep(1000);
                         }
                     }
                     break;
@@ -137,6 +154,7 @@ function task() {
             threads.shutDownAll();
         }
     }
+    stopApp(appList[appIndex]);
     let endTime = new Date().getTime();
     console.log("运行结束,共耗时" + (parseInt(endTime - startTime)) / 1000 + "秒");
 }
@@ -145,9 +163,7 @@ function task() {
  * 进入做任务界面
  */
 function getPage() {
-
     if (text("累计任务奖励").exists()) {
-
         return 3;
     }
     if (text("分红：").exists()) {
@@ -339,7 +355,10 @@ function doTask() {
     let task2;
     let task1item;
     if (!text("累计任务奖励").exists()) return 1;
-
+    text("去领取去领取").find().forEach(function (child) {
+        child.parent().parent().click();
+        sleep(2000);
+    });
     let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
     for (index = 0; index < allSelector.length; index++) {
         task1item = allSelector[index];
@@ -383,7 +402,7 @@ function doTask() {
     //处理任务
     if (taskState == 1) {
         task1item.click();
-       // randomClick(taskRect.centerX(), taskRect.centerY());
+        // randomClick(taskRect.centerX(), taskRect.centerY());
     }
     else {
 
