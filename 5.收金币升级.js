@@ -101,6 +101,16 @@ function task() {
                 } catch (error) {
                 }
             }
+            //尝试升级
+            try {
+                let updateBtn = textStartsWith("抽奖 ").findOne(2000);
+                for (let i = 0; i < 5; i++) {
+                    updateBtn.click(); sleep(1000);
+                }
+
+
+            } catch (error) {
+            }
 
             for (var i = 0; i < 3; i++) {
                 back();
