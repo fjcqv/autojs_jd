@@ -326,6 +326,7 @@ function RunTask(LevelNum, TaskName, KeyKind) {
                 }
                 for (var ii = 0; !className("android.view.View").textStartsWith(TaskKey).exists(); ii++) {
                     console.log("返回异常，再次尝试返回");
+                    if(currentPackage()=="com.jd.jrapp")back();
                     back();
                     sleep(2000);
                     if (ii > 5) {
@@ -352,6 +353,8 @@ function RunTask(LevelNum, TaskName, KeyKind) {
                 }
                 for (var ii = 0; !className("android.view.View").textStartsWith(TaskKey).exists(); ii++) {
                     console.log("返回异常，再次尝试返回");
+                    if(currentPackage()=="com.jd.jrapp")back();
+                    back();
                     back();
                     sleep(2000);
                     if (ii > 5) {
@@ -475,6 +478,11 @@ function ActiveInterface() {
             sleep(1000);
             while (text("签到领奖励").exists()) {
                 console.hide();
+                if (className("android.widget.ImageView").desc("关闭页面").findOne(2000) != null) {
+                    console.log("关闭弹窗");
+                    className("android.widget.ImageView").desc("关闭页面").findOne().click();
+                    sleep(2000);
+                }
                 boundsX = text("签到领奖励").findOnce().bounds().centerX();
                 boundsY = text("签到领奖励").findOnce().bounds().centerY();
                 console.log("签到领奖励");
@@ -588,6 +596,11 @@ function ActiveInterface() {
             sleep(1000);
             while (text("签到领奖励").exists()) {
                 console.hide();
+                if (className("android.widget.ImageView").desc("关闭页面").findOne(2000) != null) {
+                    console.log("关闭弹窗");
+                    className("android.widget.ImageView").desc("关闭页面").findOne().click();
+                    sleep(2000);
+                }
                 boundsX = text("签到领奖励").findOnce().bounds().centerX();
                 boundsY = text("签到领奖励").findOnce().bounds().centerY();
                 console.log("签到领奖励");
@@ -613,6 +626,11 @@ function ActiveInterface() {
             console.log("如一直无响应，可手动进入活动，脚本将继续执行");
             for (var ii = 0; !text("每日攒点点券").exists(); ii++) {
                 sleep(1500);
+                if (className("android.widget.ImageView").desc("关闭页面").exists()) {
+                    console.log("关闭弹窗");
+                    className("android.widget.ImageView").desc("关闭页面").findOne().click();
+                    sleep(2000);
+                }
                 if (text("每日攒点点券").exists()) {
                     break;
                 }
