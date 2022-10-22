@@ -19,7 +19,7 @@ var TASK_LIST = [
     { match: /成功入会/, isrun: true, func: joinMember },
     { match: /品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
-    { match: /点击首页浮层|去组队可得|每日6-9点打卡/, isrun: true, func: nop },
+    { match: /点击首页浮层|去组队可得|.*点打卡/, isrun: true, func: nop },
 ];
 
 var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
@@ -362,14 +362,14 @@ function doTask() {
         child.parent().parent().click();
         sleep(2000);
     });
-    let a=text("累计任务奖励").findOne(1000).parent();
-    let b=a.child(a.childCount()-1).child(0);
+    let a = text("累计任务奖励").findOne(1000).parent();
+    let b = a.child(a.childCount() - 1).child(0);
     //let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
-    for (index = 2; index < b.childCount(); index+=3) {
-        task1item=b.child(index);
-       if( task1item.text()!="去完成") continue;
-        taskText1 = b.child(index-1).child(0).text();
-        taskText2 = b.child(index-1).child(1).text();
+    for (index = 2; index < b.childCount(); index += 3) {
+        task1item = b.child(index);
+        if (task1item.text() != "去完成") continue;
+        taskText1 = b.child(index - 1).child(0).text();
+        taskText2 = b.child(index - 1).child(1).text();
         taskRect = task1item.bounds();
         let r = taskText1.match(/(\d)\/(\d*)/);
         if (!r) continue;
@@ -390,10 +390,22 @@ function doTask() {
         console.log("与上次任务一样，刷新webview");
         prevTaskText1 = "";
         try {
-            text("累计任务奖励").findOne(2000).parent().child(1).click();
-            sleep(1000);
+
+            let tmp = text("累计任务奖励").findOne(1000);
+            if (tmp) {
+                tmp.parent().child(0).click();
+                sleep(1000);
+            }
+
+            tmp = text("消耗").findOne(1000);
+            if (tmp) {
+                let hd = tmp.parent().parent().parent().parent();
+                hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
+            }
             home();
             app.launchApp(appList[appIndex]);
+            text("累计任务奖励").findOne(1000);
+
         } catch (error) {
 
         }
@@ -552,7 +564,11 @@ function nop() {
  * 8秒浏览任务
  */
 function viewLongTime() {
+    swipe((device.width / 3) * 2, (device.height / 6) * 3, (device.width / 3) * 2, (device.height / 6), 500);
     while (1) {
+        if (textStartsWith("滑动").exists()) {
+            swipe((device.width / 3) * 2, (device.height / 6) * 3, (device.width / 3) * 2, (device.height / 6), 500);
+        }
         if ((textStartsWith("获得").exists() && textEndsWith("金币").exists()) || text("已浏览").exists()) {
             console.info("任务完成，返回");
             viewAndFollow(); sleep(500);
