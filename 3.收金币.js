@@ -90,11 +90,14 @@ function task() {
             //组队领取，未完成
             if (h >= 20 && h < 22) {
                 try {
-                    text("分红：").findOne(1000).parent().parent().child(4).click();
-                    let w = textMatches(/立即领奖|明早8点开始组队哦/).findOne(6000);
+
+                    let hd = text("消耗").findOne(1000).parent().parent().parent().parent();;
+                    hd.findOne(boundsInside(0, 0, device.width / 2, device.height).clickable().desc("")).click();
+                    let w = textMatches(/立即领奖立即领奖|明早8点开始组队哦/).findOne(6000);
                     if (w != null) {
-                        if (w.text() == "立即领奖") {
-                            text("开心收下开心收下").findOne(8000).parent().click();
+                        if (w.text() == "立即领奖立即领奖") {
+                            console.log("立即领奖立即领奖")
+                            text("开心收下").findOne(8000).click();
                         }
                         back();
                     }

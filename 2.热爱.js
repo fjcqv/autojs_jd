@@ -14,12 +14,14 @@ var TASK_LIST = [
     { match: /下单再得|返现金|每邀1个/, isrun: false, func: nop },
     { match: /.*浏览.*s.*|.*浏览.*秒.*/, isrun: true, func: viewLongTime },
     { match: /去种草城逛大牌店铺/, isrun: true, func: interactionGrassPlanting },
+    { match: /浏览品牌墙店铺/, isrun: true, func: delayAndBack },
     { match: /^浏览可得.*|玩AR游戏可得|浏览并关注可得/, isrun: true, func: viewAndFollow },
     { match: /累计浏览并加购|累计浏览.*个商品/, isrun: true, func: addMarketCar },
     { match: /成功入会/, isrun: true, func: joinMember },
     { match: /品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
     { match: /点击首页浮层|去组队可得|.*点打卡/, isrun: true, func: nop },
+    { match: /参与互动即可|参与即可/, isrun: true, func: ClickAndBack }
 ];
 
 var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
@@ -121,21 +123,30 @@ function task() {
                     break;
                 default:
                     let currentPackageName = currentPackage();
-                    if (currentPackageName != packageName) {
-                        runCheck++;
-                        console.log(runCheck)
-                        if (runCheck > 30) {
-                            runCheck = 0;
-                            console.error("出现异常，重启应用");
-                            stopApp(appList[appIndex]);
-                            app.launchApp(appList[appIndex]);
-                        }
-                    }
-                    else if (currentPackageName == "com.tencent.mm" || currentPackageName == "com.jd.jrapp") {
+                    if (currentPackageName == null) currentPackageName = "";
+                    if (currentPackageName == "com.tencent.mm" || currentPackageName == "com.jd.jrapp") {
                         runCheck++;
                         if (runCheck > 5) {
                             runCheck = 0;
                             console.error("跳转到微信和京东金融，重新进");
+                            app.launchApp(appList[appIndex]);
+                        }
+                    }
+                    else if (currentPackageName.indexOf("launcher") != -1) {
+                        runCheck++;
+                        if (runCheck > 5) {
+                            runCheck = 0;
+                            console.error("桌面，返回京东");
+                            app.launchApp(appList[appIndex]);
+                        }
+                    }
+                    else if (currentPackageName != packageName) {
+                        runCheck++;
+                        console.log(currentPackageName + runCheck)
+                        if (runCheck > 25) {
+                            runCheck = 0;
+                            console.error("出现异常，重启应用");
+                            stopApp(appList[appIndex]);
                             app.launchApp(appList[appIndex]);
                         }
                     }
@@ -166,7 +177,7 @@ function getPage() {
     if (text("累计任务奖励").exists()) {
         return 3;
     }
-    if (id("feedSponsor").exists()) {
+    if (text("消耗").exists()) {
         return 2;
     }
     // if (text("分红：").exists()) {
@@ -251,7 +262,7 @@ function activity() {
     }
     console.log("尝试点击任务");
     try {
-        let hd = text("消耗").findOne(1000).parent().parent().parent().parent();;
+        let hd = text("消耗").findOne(1000).parent().parent().parent().parent();
         hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
         if (text("累计任务奖励").findOne(2000) == null) {
             home();
@@ -359,7 +370,7 @@ function doTask() {
     let task1item;
     if (!text("累计任务奖励").exists()) return 1;
     text("去领取去领取").find().forEach(function (child) {
-        child.parent().parent().click();
+        child.parent().click();
         sleep(2000);
     });
     let a = text("累计任务奖励").findOne(1000).parent();
@@ -367,7 +378,9 @@ function doTask() {
     //let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
     for (index = 2; index < b.childCount(); index += 3) {
         task1item = b.child(index);
-        if (task1item.text() != "去完成") continue;
+
+        if (!(task1item.text() == "去完成" || task1item.text() == "去领取" || task1item.text() == "去打卡")) continue;
+        //console.log(task1item.text())
         taskText1 = b.child(index - 1).child(0).text();
         taskText2 = b.child(index - 1).child(1).text();
         taskRect = task1item.bounds();
@@ -375,6 +388,7 @@ function doTask() {
         if (!r) continue;
         let tCount = (r[2] - r[1]);
         if (tCount == 0) continue;
+        //console.log(taskText2 + taskText1)
         task2 = TASK_LIST.find(s => { return s.match.exec(taskText2 + taskText1) != null });
         if (task2) {
             if (task2.isrun) break;
@@ -555,6 +569,14 @@ function viewAndFollow() {
     }
 }
 /**
+ * 返回
+ */
+function ClickAndBack() {
+    sleep(1000);
+    back();
+
+}
+/**
  * 无操作
  */
 function nop() {
@@ -580,12 +602,27 @@ function viewLongTime() {
     }
 }
 /**
+ * 10秒浏览任务
+ */
+function delayAndBack() {
+    for (i = 0; i < 10; i++) {
+        console.log(i);
+        sleep(1000);
+    }
+    viewAndFollow();
+}
+/**
  * 底部品牌墙店铺
  */
 function viewBottomShop() {
     console.info("进入首页品牌墙任务");
-    sleep(1000);
-    let allPinpai = textContains('!q70').find();
+    let a = id("feedBottom").findOne(2000);
+    if (a == null) {
+        console.log("找不到品牌墙");
+        back();
+        return;
+    }
+    let allPinpai = a.find(textContains('!q70'));
     if (allPinpai.length > 10) {
         for (var i = 5; i < 10; i++) {
             console.log("第" + (i - 4) + "个店铺");
@@ -610,22 +647,32 @@ function viewBottomShop() {
 */
 function viewSmallApp() {
     let cnt = 0;
+    // sleep(1000);
+    // home();
+    // app.launchApp(appList[appIndex]);
     while (1) {
+        sleep(1000);
+        home();
+        app.launchApp(appList[appIndex]);
+        sleep(1000);
         if (text("使用以下方式打开").exists()) {
             text("微信").findOne().parent().click();
             sleep(1000);
-            cnt = 0;
+            // cnt = 0;
         }
-        if (textContains("应用包名签名信息校验不通过").exists()) {
-            text("确定").findOne().click();
-            cnt = 0;
-        }
+
+        if (text("累计任务奖励").exists()) break;
+        // if (textContains("应用包名签名信息校验不通过").exists()) {
+        //     text("确定").findOne().click();
+        //     cnt = 0;
+        // }
         cnt++;
         if (cnt > 5) break;
-        sleep(1000);
         console.log("微信小程序:", 5 - cnt);
     }
-    viewAndFollow();
+    home();
+    app.launchApp(appList[appIndex]);
+    //viewAndFollow();
 }
 /**
  * 互动种草城
@@ -712,7 +759,12 @@ function joinMember() {
     }
     else {
         //入会操作
-        ruhui(check)
+        try {
+            ruhui(check);
+        } catch (error) {
+            console.log(error);
+        }
+
     }
 
     viewAndFollow();
