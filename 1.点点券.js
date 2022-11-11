@@ -209,6 +209,10 @@ function RunAllTask() {
                 | textStartsWith("关注浏览10s").findOnce().parent().child(3).text() == "继续完成")) {
                 RunTask(1, "关注浏览10s", 2);
             }
+            else if (textStartsWith("关注浏览8s").exists() && (textStartsWith("关注浏览8s").findOnce().parent().child(3).text() == "领取任务"
+                | textStartsWith("关注浏览8s").findOnce().parent().child(3).text() == "继续完成")) {
+                RunTask(1, "关注浏览8s", 2);
+            }
             else if (text("领暴力好券").exists() && (text("领暴力好券").findOnce().parent().child(3).text() == "领取任务"
                 | text("领暴力好券").findOnce().parent().child(3).text() == "继续完成")) {
                 RunTask(1, "领暴力好券", 3);
@@ -326,7 +330,7 @@ function RunTask(LevelNum, TaskName, KeyKind) {
                 }
                 for (var ii = 0; !className("android.view.View").textStartsWith(TaskKey).exists(); ii++) {
                     console.log("返回异常，再次尝试返回");
-                    if(currentPackage()=="com.jd.jrapp")back();
+                    if (currentPackage() == "com.jd.jrapp") back();
                     back();
                     sleep(2000);
                     if (ii > 5) {
@@ -337,6 +341,9 @@ function RunTask(LevelNum, TaskName, KeyKind) {
             }
             console.log("浏览完成");
         } else if (KeyKind == 2) {
+            let taskDelay = 10;
+            let r = TaskName.match(/(\d)s/);
+            if (r) taskDelay = r[1];
             for (var i = 0; text("浏览并关注").exists(); i++) {
                 console.log("第" + (i + 1) + "次关注浏览");//关注浏览10s
                 className("android.view.View").textStartsWith(TaskKey).findOnce().parent().child(2).child(0).click();
@@ -353,10 +360,10 @@ function RunTask(LevelNum, TaskName, KeyKind) {
                 }
                 for (var ii = 0; !className("android.view.View").textStartsWith(TaskKey).exists(); ii++) {
                     console.log("返回异常，再次尝试返回");
-                    if(currentPackage()=="com.jd.jrapp")back();
+                    if (currentPackage() == "com.jd.jrapp") back();
                     back();
                     back();
-                    sleep(2000);
+                    sleep(taskDelay*1000);
                     if (ii > 5) {
                         console.error("任务异常，请重新运行脚本");
                         return;
@@ -523,6 +530,12 @@ function ActiveInterface() {
                                 sleep(2000);
                                 break;
                             }
+                            if (text("我知道了").exists()) {
+                                console.log("没奖品，我知道了");
+                                text("我知道了").findOne().click();
+                                sleep(2000);
+                                break;
+                            }
                             console.log("等待开奖……");
                             sleep(2000);
                         }
@@ -567,6 +580,12 @@ function ActiveInterface() {
                         if (text("再抽一次").exists()) {
                             console.log("没奖品，再抽一次");
                             text("再抽一次").findOne().click();
+                            sleep(2000);
+                            break;
+                        }
+                        if (text("我知道了").exists()) {
+                            console.log("没奖品，我知道了");
+                            text("我知道了").findOne().click();
                             sleep(2000);
                             break;
                         }
