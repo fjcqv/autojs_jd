@@ -12,19 +12,18 @@ var taskTimeLimit = 600;
 var appIndex = 0;
 var TASK_LIST = [
     { match: /下单再得|返现金|每邀1个/, isrun: false, func: nop },
-    { match: /.*浏览.*s.*|.*浏览.*秒.*/, isrun: true, func: viewLongTime },
+    { match: /.*浏览.*s.*|.*浏览.*秒.*/, isrun: true, iSeq: true, func: viewLongTime },
     { match: /去种草城逛大牌店铺/, isrun: true, func: interactionGrassPlanting },
-    { match: /浏览品牌墙店铺/, isrun: true, func: delayAndBack },
-    { match: /^浏览可得.*|玩AR游戏可得|浏览并关注可得/, isrun: true, func: viewAndFollow },
+    { match: /浏览品牌墙店铺|浏览品牌墙店铺/, isrun: true, func: delayAndBack },
+    { match: /^浏览可得.*|^浏览可获得.*|玩AR游戏可得|超多福利好物浏览可得|浏览并关注可得/, isrun: true, iSeq: true, func: viewAndFollow },
     { match: /累计浏览并加购|累计浏览.*个商品/, isrun: true, func: addMarketCar },
-    { match: /成功入会/, isrun: true, func: joinMember },
+    { match: /成功入会/, isrun: true, iSeq: true, func: joinMember },
     { match: /品牌墙店铺/, isrun: true, func: viewBottomShop },
     { match: /小程序/, isrun: true, func: viewSmallApp },
     { match: /点击首页浮层|去组队可得|.*点打卡/, isrun: true, func: nop },
     { match: /参与互动即可|参与即可/, isrun: true, func: ClickAndBack }
 ];
 
-var PASS_LIST = ['请选择要使用的应用', '我知道了', '取消', "京口令已复制",];
 var nowTime;
 
 main();
@@ -119,7 +118,7 @@ function task() {
                         break;
                     }
                     if (doTask()) { doTaskFaild = 0; }
-                    else { doTaskFaild++; if (doTaskFaild > 3) run = false; }
+                    else { doTaskFaild++; if (doTaskFaild > 3) { signTask(); run = false; } }
                     break;
                 default:
                     let currentPackageName = currentPackage();
@@ -177,9 +176,12 @@ function getPage() {
     if (text("累计任务奖励").exists()) {
         return 3;
     }
-    if (text("消耗").exists()) {
+    if (text("攻略").exists() && text("记录").exists()) {
         return 2;
     }
+    // if (text("消耗").exists()) {
+    //     return 2;
+    // }
     // if (text("分红：").exists()) {
     //     return 2;
     // }
@@ -245,9 +247,9 @@ function activity() {
         //     textContains("开心收下").findOne().parent().click();
         //     sleep(1000);
         // }
-        if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
-            console.log("收集金币");
-            var clickCollect = textMatches(/[0-2]{2}:.*后满|领取金币/).findOne();;
+        if (textMatches(/[0-2]{2}:.*存满|点击领取/).exists()) {
+            console.log("收集爆竹");
+            var clickCollect = textMatches(/[0-2]{2}:.*存满|点击领取/).findOne();
             clickCollect.parent().click();
             sleep(1000);
         }
@@ -262,7 +264,7 @@ function activity() {
     }
     console.log("尝试点击任务");
     try {
-        let hd = text("消耗").findOne(1000).parent().parent().parent().parent();
+        let hd = textMatches(/^\d*个$/).findOne(1000).parent().parent();
         hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
         if (text("累计任务奖励").findOne(2000) == null) {
             home();
@@ -368,37 +370,70 @@ function doTask() {
     let taskRect;
     let task2;
     let task1item;
+    let taskCnt = 1;
     if (!text("累计任务奖励").exists()) return 1;
     text("去领取去领取").find().forEach(function (child) {
         child.parent().click();
         sleep(2000);
     });
-    let a = text("累计任务奖励").findOne(1000).parent();
-    let b = a.child(a.childCount() - 1).child(0);
-    //let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
-    for (index = 2; index < b.childCount(); index += 3) {
-        task1item = b.child(index);
+    text("去领取").find().forEach(function (child) {
+        child.parent().click();
+        sleep(2000);
+    });
+    try {
+        let taskView = text("邀请好友助力").findOne(1000).parent();
+        for (index = 0; index < (taskView.childCount() - 4); index += 5) {
+            taskText1 = taskView.child(index + 1).text();
+            taskText2 = taskView.child(index + 3).text();
+            task1item = taskView.child(index + 4);
+            let task1text = task1item.child(0).child(0).text()
+            if (!(task1text == "去完成" || task1text == "去领取" || task1text == "去打卡")) continue;
+            taskRect = taskView.child(index + 4).bounds();
+            let r = taskView.child(index + 2).text().match(/(\d)\/(\d*)/);
+            if (!r) continue;
+            let tCount = (r[2] - r[1]);
+            if (tCount == 0) continue;
+            taskCnt = tCount;
 
-        if (!(task1item.text() == "去完成" || task1item.text() == "去领取" || task1item.text() == "去打卡")) continue;
-        //console.log(task1item.text())
-        taskText1 = b.child(index - 1).child(0).text();
-        taskText2 = b.child(index - 1).child(1).text();
-        taskRect = task1item.bounds();
-        let r = taskText1.match(/(\d)\/(\d*)/);
-        if (!r) continue;
-        let tCount = (r[2] - r[1]);
-        if (tCount == 0) continue;
-        //console.log(taskText2 + taskText1)
-        task2 = TASK_LIST.find(s => { return s.match.exec(taskText2 + taskText1) != null });
-        if (task2) {
-            if (task2.isrun) break;
-            continue;
-        } else {
-            console.error("没有处理：", taskText2);
+            console.log(taskText2 + taskText1);
+            task2 = TASK_LIST.find(s => { return s.match.exec(taskText2 + taskText1) != null });
+            if (task2) {
+                if (task2.isrun) break;
+                continue;
+            } else {
+                console.error("没有处理：", taskText2);
+            }
         }
+        if (index > (taskView.childCount() - 4)) return 0;
+    } catch (error) {
+
     }
+    // let a = text("累计任务奖励").findOne(1000).parent();
+    // let b = a.child(a.childCount() - 1).child(0);
+    // //let allSelector = className('android.view.View').depth(19).indexInParent(3).drawingOrder(0).clickable().find();
+    // for (index = 2; index < b.childCount(); index += 3) {
+    //     task1item = b.child(index);
+
+    //     if (!(task1item.text() == "去完成" || task1item.text() == "去领取" || task1item.text() == "去打卡")) continue;
+    //     //console.log(task1item.text())
+    //     taskText1 = b.child(index - 1).child(0).text();
+    //     taskText2 = b.child(index - 1).child(1).text();
+    //     taskRect = task1item.bounds();
+    //     let r = taskText1.match(/(\d)\/(\d*)/);
+    //     if (!r) continue;
+    //     let tCount = (r[2] - r[1]);
+    //     if (tCount == 0) continue;
+    //     //console.log(taskText2 + taskText1)
+    //     task2 = TASK_LIST.find(s => { return s.match.exec(taskText2 + taskText1) != null });
+    //     if (task2) {
+    //         if (task2.isrun) break;
+    //         continue;
+    //     } else {
+    //         console.error("没有处理：", taskText2);
+    //     }
+    // }
     //任务完成
-    if (index > b.childCount()) return 0;
+
     //webview刷新bug修复
     if (prevTaskText1 == taskText1) {
         console.log("与上次任务一样，刷新webview");
@@ -421,9 +456,7 @@ function doTask() {
             text("累计任务奖励").findOne(1000);
 
         } catch (error) {
-
         }
-
         return 1;
     }
     else {
@@ -437,17 +470,72 @@ function doTask() {
     else {
 
         console.log("开始任务：", taskText1);
-        //console.log(taskRect)
-        task1item.click();
-        //randomClick(taskRect.centerX(), taskRect.centerY());
-        sleep(1000);
-        if (!execFuncWait(task2.func, 35 * 1000)) {
-            console.error("运行失败:", taskText1);
-            viewAndFollow();
+
+        if (task2.iSeq) {
+            console.log("连续运行", taskCnt, "次");
+            for (index = 0; index < taskCnt; index++) {
+                console.log("第", index + 1, "次运行");
+                task1item.click();
+                //randomClick(taskRect.centerX(), taskRect.centerY());
+                sleep(1000);
+                if (!execFuncWait(task2.func, 35 * 1000)) {
+                    console.error("运行失败:", taskText1);
+                    viewAndFollow();
+                }
+                sleep(1000);
+
+            }
+
+
+
+        } else {
+            task1item.click();
+            //randomClick(taskRect.centerX(), taskRect.centerY());
+            sleep(1000);
+            if (!execFuncWait(task2.func, 35 * 1000)) {
+                console.error("运行失败:", taskText1);
+                viewAndFollow();
+            }
         }
+        closeTaskList();
+        sleep(1000);
+        openTaskList();
     }
     return 1;
 
+}
+function openTaskList() {
+    console.log('打开任务列表')
+    try {
+        let hd = textMatches(/^\d*个$/).findOne(1000).parent().parent();
+        hd.findOne(boundsInside(device.width / 2, 0, device.width, device.height).clickable()).click();
+        if (text("累计任务奖励").findOne(2000) == null) {
+            home();
+            app.launchApp(appList[appIndex]);
+        }
+        if (text("累计任务奖励").findOne(2000) == null) {
+            console.log("打开任务界面失败");
+        }
+    } catch (error) {
+        console.log("打开任务界面失败");
+    }
+}
+function closeTaskList() {
+    console.log('关闭任务列表')
+    let anchor = text('累计任务奖励').findOne(5000)
+    if (!anchor) {
+        console.log('无法找到任务奖励标识')
+        return false
+    }
+
+    anchor = anchor.parent()
+
+    let closeBtn = anchor.child(anchor.childCount() - 2) // tbs
+    if (!closeBtn.clickable()) {
+        closeBtn = anchor.child(anchor.childCount() - 1) // webview
+    }
+
+    return closeBtn.click()
 }
 /**
  * 开线程运行函数，超时退出，返回运行结果
@@ -591,7 +679,7 @@ function viewLongTime() {
         if (textStartsWith("滑动").exists()) {
             swipe((device.width / 3) * 2, (device.height / 6) * 3, (device.width / 3) * 2, (device.height / 6), 500);
         }
-        if ((textStartsWith("获得").exists() && textEndsWith("金币").exists()) || text("已浏览").exists()) {
+        if ((textStartsWith("获得").exists() && textEndsWith("爆竹").exists()) || text("已浏览").exists()) {
             console.info("任务完成，返回");
             viewAndFollow(); sleep(500);
             break;
@@ -700,10 +788,10 @@ function interactionGrassPlanting() {
             for (let i = 0; i < c; i++) {
                 click(bound[0], bound[1])
                 console.log('浏览店铺页')
-                sleep(8000)
+                sleep(3000)
                 console.log('返回')
                 back()
-                sleep(5000)
+                sleep(3000)
                 let r = textContains('喜欢').findOnce()
                 if (!r) {
                     back()
@@ -722,14 +810,14 @@ function addMarketCar() {
     sleep(1000);
     textMatches(/当前页[浏览加购|点击浏览].*个.*/).waitFor();
 
-    const productList = textContains('¥').find();
+    const productList = textContains('.jpg!q70').find();
     console.info("当前商品数量：", productList.length);
-    var count = 0;
+    let count = 0;
     for (index = 0; index < 4; index++) {
-        if (productList[index].parent().parent().children()[4].click()) {
+        if (productList[index].parent().parent().children()[3].click()) {
             console.log("第" + (index + 1) + "个商品");
-            sleep(1000);
-            for (var ii = 0; !textMatches(/当前页[浏览加购|点击浏览].*个.*/).exists(); ii++) {
+            sleep(3000);
+            for (let ii = 0; !textMatches(/当前页[浏览加购|点击浏览].*个.*/).exists(); ii++) {
                 if (ii == 0) {
                     console.log("返回");
                 } else {
@@ -739,6 +827,7 @@ function addMarketCar() {
                 sleep(2000);
                 if (ii > 4) {
                     console.error("任务异常，退出当前账号");
+                    back(); back(); back();
                     return;
                 }
             }
@@ -814,4 +903,58 @@ function ruhui(check) {
         console.show()
         return false
     }
+}
+
+function signTask() {
+    console.log('尝试关闭弹窗')
+
+    let anchor = textMatches(/\+\d*爆竹/).findOnce();
+
+    for (let i = 0; i < 5 && anchor; i++) {
+        try {
+            let tmp = anchor.parent().parent().child(0)
+            if (!tmp.clickable()) {
+                tmp = anchor.parent().parent().parent().child(0)
+            }
+            tmp.click()
+            console.log('关闭')
+            sleep(1000)
+            anchor = textMatches(/\+\d*爆竹/).findOnce()
+        } catch (err) {
+            pass
+        }
+    }
+
+    anchor = text('记录').findOne(5000)
+    if (!anchor) {
+        console.log('未能定位，签到失败')
+        quit()
+    }
+    let sign
+    if (anchor.indexInParent() < 3) {
+        anchor = anchor.parent()
+    }
+
+    sign = anchor.parent().child(10)
+
+    if (!sign.clickable()) {
+        sign = anchor.parent().child(11)
+    }
+
+    sign.click()
+    sleep(3000)
+
+    anchor = text('提醒我每天签到').findOne(5000)
+
+    if (!anchor) {
+        console.log('未找到签到按钮')
+        return false
+    }
+
+    anchor = anchor.parent().parent()
+
+    sign = anchor.child(anchor.childCount() - 2)
+
+    console.log('点击签到')
+    return sign.click()
 }

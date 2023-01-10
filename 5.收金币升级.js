@@ -81,20 +81,23 @@ function task() {
             randomClick(huodong.centerX(), huodong.centerY());
             sleep(1000);
         }
-        if (textMatches(/[0-2]{2}:.*后满|领取金币/).exists()) {
+        if (textMatches(/[0-2]{2}:.*存满|点击领取/).exists()) {
             console.log("领取金币");
-            var clickCollect = textMatches(/[0-2]{2}:.*后满|领取金币/).findOne();;
+            var clickCollect = textMatches(/[0-2]{2}:.*存满|点击领取/).findOne();;
             clickCollect.parent().click();
             sleep(1000);
             let h = new Date().getHours();
             //组队领取，未完成
             if (h >= 20 && h < 22) {
                 try {
-                    text("分红：").findOne(1000).parent().parent().child(4).click();
-                    let w = textMatches(/立即领奖|明早8点开始组队哦/).findOne(6000);
+
+                    let hd = textMatches(/^\d*个$/).findOne(1000).parent().parent();
+                    hd.findOne(boundsInside(0, 0, device.width / 2, device.height).clickable()).click();
+                    let w = textMatches(/立即领奖立即领奖|明早8点开始组队哦/).findOne(6000);
                     if (w != null) {
-                        if (w.text() == "立即领奖") {
-                            text("开心收下开心收下").findOne(8000).parent().click();
+                        if (w.text() == "立即领奖立即领奖") {
+                            console.log("立即领奖立即领奖")
+                            text("开心收下").findOne(8000).click();
                         }
                         back();
                     }
@@ -103,10 +106,13 @@ function task() {
             }
             //尝试升级
             try {
-                let updateBtn = text("消耗").findOne(1000).parent().parent().parent();
-                for (let i = 0; i < 5; i++) {
-                    updateBtn.click(); sleep(1000);
+                let updateBtn = textMatches(/^消耗\d*爆竹$/).findOne(1000).parent();
+                
+                for (let i = 0; i < 50; i++) {
+                    updateBtn.click(); sleep(3000);
+                    if (text("累计任务奖励").exists()) break;
                 }
+                console.log("升级完成");
 
 
             } catch (error) {
